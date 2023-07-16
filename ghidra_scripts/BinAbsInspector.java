@@ -1,6 +1,6 @@
 //
 //@author Tencent KeenLab
-//@category Analysis
+//@category _NativeSummary
 //@keybinding
 //@menupath Analysis.BinAbsInspector
 //@toolbar keenlogo.gif
@@ -26,6 +26,8 @@ import com.bai.util.Logging;
 import com.bai.util.Utils;
 import java.awt.Color;
 import java.util.List;
+
+import ghidra.util.exception.CancelledException;
 import org.apache.commons.lang3.StringUtils;
 
 public class BinAbsInspector extends GhidraScript {
@@ -37,7 +39,7 @@ public class BinAbsInspector extends GhidraScript {
         return language != null;
     }
 
-    protected boolean analyzeFromMain() {
+    protected boolean analyzeFromMain() throws CancelledException {
         List<Function> functions = GlobalState.currentProgram.getListing().getGlobalFunctions("main");
         if (functions == null || functions.size() == 0) {
             return false;
@@ -53,7 +55,7 @@ public class BinAbsInspector extends GhidraScript {
         return true;
     }
 
-    protected boolean analyzeFromAddress(Address entryAddress) {
+    protected boolean analyzeFromAddress(Address entryAddress) throws CancelledException {
         Function entryFunction = GlobalState.flatAPI.getFunctionAt(entryAddress);
         if (entryAddress == null) {
             Logging.error("Could not find entry function at " + entryAddress);
@@ -72,7 +74,7 @@ public class BinAbsInspector extends GhidraScript {
      * 3. Start from "e_entry" address from ELF header if step 2 fails.
      * @return
      */
-    protected boolean analyze() {
+    protected boolean analyze() throws CancelledException {
         Program program = GlobalState.currentProgram;
         if (program == null) {
             Logging.error("Import program error.");
@@ -86,6 +88,7 @@ public class BinAbsInspector extends GhidraScript {
             GlobalState.eEntryFunction = Utils.getEntryFunction();
             if (GlobalState.eEntryFunction == null) {
                 Logging.error("Cannot find entry function, maybe unsupported file format or corrupted header.");
+                Logging.error("Failed to analyze the program: no entrypoint.");
                 return false;
             }
             if (!analyzeFromMain()) {
@@ -115,6 +118,7 @@ public class BinAbsInspector extends GhidraScript {
 
     @Override
     public void run() throws Exception {
+        GlobalState.reset();
         GlobalState.config = new Config();
         if (isRunningHeadless()) {
             String allArgString = StringUtils.join(getScriptArgs()).strip();
@@ -157,6 +161,6 @@ public class BinAbsInspector extends GhidraScript {
         Logging.info("Running checkers");
         CheckerManager.runCheckers(GlobalState.config);
         guiProcessResult();
-        GlobalState.reset();
+//        GlobalState.reset();
     }
 }

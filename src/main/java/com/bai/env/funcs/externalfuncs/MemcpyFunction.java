@@ -20,7 +20,7 @@ import java.util.Set;
  */
 public class MemcpyFunction extends ExternalFunctionBase {
 
-    private static final Set<String> staticSymbols = Set.of("memcpy");
+    private static final Set<String> staticSymbols = Set.of("memcpy", "__aeabi_memcpy");
 
     public MemcpyFunction() {
         super(staticSymbols);
@@ -48,20 +48,21 @@ public class MemcpyFunction extends ExternalFunctionBase {
                 size = Math.max(size, Math.min(StringUtils.MAX_LEN, absVal.getValue()));
             }
         }
-        if (!srcPtrKSet.isSingleton() || !dstPtrKSet.isSingleton()) {
-            Logging.warn("Handling non-singleton in memcpy, may lead to imprecise result.");
-        }
-        for (AbsVal srcPtr : srcPtrKSet) {
-            if (srcPtr.isBigVal()) {
-                continue;
-            }
-            for (AbsVal dstPtr : dstPtrKSet) {
-                if (dstPtr.isBigVal()) {
-                    continue;
-                }
-                StringUtils.copyString(dstPtr, srcPtr, inOutEnv, (int) size);
-            }
-        }
+        // disable non singleton
+//        if (!srcPtrKSet.isSingleton() || !dstPtrKSet.isSingleton()) {
+//            Logging.warn("Handling non-singleton in memcpy, may lead to imprecise result.");
+//        }
+//        for (AbsVal srcPtr : srcPtrKSet) {
+//            if (srcPtr.isBigVal()) {
+//                continue;
+//            }
+//            for (AbsVal dstPtr : dstPtrKSet) {
+//                if (dstPtr.isBigVal()) {
+//                    continue;
+//                }
+//                StringUtils.copyString(dstPtr, srcPtr, inOutEnv, (int) size);
+//            }
+//        }
     }
 
 }

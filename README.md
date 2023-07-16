@@ -1,105 +1,89 @@
-# What is  BinAbsInspector?
+# Native Summary Project
 
-BinAbsInspector (Binary Abstract Inspector) is a static analyzer for automated reverse engineering and scanning vulnerabilities in binaries, which is a long-term research project incubated at [Keenlab](https://keenlab.tencent.com/). It is based on abstract interpretation with the support from Ghidra. It works on Ghidra's Pcode instead of assembly. Currently it supports binaries on x86,x64, armv7 and aarch64. 
+## interface
 
-# Installation
-+ Install Ghidra according to [Ghidra's documentation](https://github.com/NationalSecurityAgency/ghidra#install)
-+ Install [Z3](https://github.com/Z3Prover/z3) (tested version: 4.8.15)
-+ Note that generally there are two parts for Z3 library: one is Java package, the other one is native library. The Java package is already included in "/lib" directory, but we suggest that you replace it with your own Java package for version compatibility.
-  + For Windows, download a pre-built package from [here](https://github.com/Z3Prover/z3/releases), extract the zip file and add a PATH environment variable pointing to `z3-${version}-win/bin`
-  + For Linux, install with package manager is NOT recommended, there are two options:
-    1. You can download suitable pre-build package from [here](https://github.com/Z3Prover/z3/releases), extract the zip file and copy `z3-${version}-win/bin/*.so` to `/usr/local/lib/`
-    2. or you can build and install z3 according to [Building Z3 using make and GCC/Clang](https://github.com/Z3Prover/z3#building-z3-using-make-and-gccclang)
-  + For MacOS, it is similar to Linux.
-+ Download the extension zip file from [release page](https://github.com/KeenSecurityLab/BinAbsInspector/releases)
-+ Install the extension according to [Ghidra Extension Notes](https://ghidra-sre.org/InstallationGuide.html#GhidraExtensionNotes)
+the tool is designed to run after preprocessing process. cannot simply run on any `.so` file without special justification.
 
-# Building
-Build the extension by yourself, if you want to develop a new feature, please refer to [development guide](https://github.com/KeenSecurityLab/BinAbsInspector/wiki/Developer-Guide).
-+ Install Ghidra and Z3
-+ Install [Gradle 7.x](https://gradle.org/releases/) (tested version: 7.4)
-+ Pull the repository
-+ Run `gradle buildExtension` under repository root
-+ The extension will be generated at `dist/${GhidraVersion}_${date}_BinAbsInspector.zip` 
+first preprocessing step (not this repo) will create `<apk_name>.native_summary` folder, containing every `.so` file that need to be analyzed, and a `.funcs.json` file containing static binding resolution results. the `runner.py` is a simple script that call ghidra to analyse the `.so` file and call NativeSummary as a post script. NativeSummary simply use the file path of the file being analyzing and change the suffix to find the json file. and will analysze `JNI_OnLoad` if there is one.
 
-# Usage
-You can run BinAbsInspector in headless mode, GUI mode, or with docker.
+## development process
 
-+ With Ghidra headless mode.
-```
-$GHIDRA_INSTALL_DIR/support/analyzeHeadless <projectPath> <projectName> -import <file> -postScript BinAbsInspector "@@<scriptParams>"
-```
-`<projectPath>`   --   Ghidra project path.  
-`<projectName>`   --   Ghidra project name.  
-`<scriptParams>`  --   The argument for our analyzer, provides following options:
+use runner.py to batch process apks. For each case, use intellij IDEA to debug Ghidira in GUI mode, and load the corresponding project, and manually invoke script, wait for breakpoints.
 
-| Parameter                                 | Description                           |
-| ----------------------------------------- | --------------------------------------|
-| `[-K <kElement>]`                         | KSet size limit [K](https://github.com/KeenSecurityLab/BinAbsInspector/wiki/Technical-Details#kset)             |
-| `[-callStringK <callStringMaxLen>]`       | Call string maximum length [K](https://github.com/KeenSecurityLab/BinAbsInspector/wiki/Technical-Details#context)|
-| `[-Z3Timeout <timeout>]`                  | Z3 timeout                            |
-| `[-timeout <timeout>]`                    | Analysis timeout                      |
-| `[-entry <address>]`                      | Entry address                         |
-| `[-externalMap <file>]`                   | External function model config        |
-| `[-json]`                                 | Output in json format                 |
-| `[-disableZ3]`                            | Disable Z3                            |
-| `[-all]`                                  | Enable all checkers                   |
-| `[-debug]`                                | Enable debugging log output           |
-| `[-check "<cweNo1>[;<cweNo2>...]"]`       | Enable specific checkers              |
+## setup
 
-+ With Ghidra GUI
-  1. Run Ghidra and import the target binary into a project
-  2. Analyze the binary with default settings
-  3. When the analysis is done, open `Window -> Script Manager` and find `BinAbsInspector.java`
-  4. Double-click on `BinAbsInspector.java` entry, set the parameters in configuration window and click OK
-  5. When the analysis is done, you can see the CWE reports in console window, double-click the addresses from the report can jump to corresponding address
++ install ghidra.
 
-+ With Docker
++ create `gradle.properties` in project root, and set appropriate properties (on Windows, use `/` or `\\` instead of `\`)
 
-```shell
-git clone git@github.com:KeenSecurityLab/BinAbsInspector.git
-cd BinAbsInspector
-docker build . -t bai
-docker run -v $(pwd):/data/workspace bai "@@<script parameters>" -import <file>
-```
+    ```
+    org.gradle.java.home = C:\\Program Files\\Java\\jdk-13.0.1
+    GHIDRA_INSTALL_DIR=C:/Users/xxx/my_programs/ghidra_10.1.2_PUBLIC
+    ```
++ execute build-and-install.sh ( build-and-install.bat on Windows. )
 
-# Implemented Checkers
-So far BinAbsInspector supports following checkers:
+~~Or, use `./gradlew buildExtension -PGHIDRA_INSTALL_DIR=/home/user/programs/ghidra_10.1.2_PUBLIC`~~
 
-+ [CWE78](https://cwe.mitre.org/data/definitions/78.html)  (OS Command Injection)
-+ [CWE119](https://cwe.mitre.org/data/definitions/119.html) (Buffer Overflow (generic case))
-+ [CWE125](https://cwe.mitre.org/data/definitions/125.html) (Buffer Overflow (Out-of-bounds Read))
-+ [CWE134](https://cwe.mitre.org/data/definitions/134.html) (Use of Externally-Controlled Format string)
-+ [CWE190](https://cwe.mitre.org/data/definitions/190.html) (Integer overflow or wraparound)
-+ [CWE367](https://cwe.mitre.org/data/definitions/367.html) (Time-of-check Time-of-use (TOCTOU))
-+ [CWE415](https://cwe.mitre.org/data/definitions/415.html) (Double free)
-+ [CWE416](https://cwe.mitre.org/data/definitions/416.html) (Use After Free)
-+ [CWE426](https://cwe.mitre.org/data/definitions/426.html) (Untrusted Search Path)
-+ [CWE467](https://cwe.mitre.org/data/definitions/467.html) (Use of sizeof() on a pointer type)
-+ [CWE476](https://cwe.mitre.org/data/definitions/476.htmll) (NULL Pointer Dereference)
-+ [CWE676](https://cwe.mitre.org/data/definitions/676.html) (Use of Potentially Dangerous Function)
-+ [CWE787](https://cwe.mitre.org/data/definitions/787.html) (Buffer Overflow (Out-of-bounds Write))
+### intellij headless debug setup
 
-# Project Structure
-The structure of this project is as follows, please refer to [technical details](https://github.com/KeenSecurityLab/BinAbsInspector/wiki/Technical-Details) for more details.
-```
-├── main
-│   ├── java
-│   │   └── com
-│   │       └── bai
-│   │           ├── checkers                       checker implementatiom
-│   │           ├── env
-│   │           │   ├── funcs                      function modeling
-│   │           │   │   ├── externalfuncs          external function modeling
-│   │           │   │   └── stdfuncs               cpp std modeling
-│   │           │   └── region                     memory modeling
-│   │           ├── solver                         analyze core and grpah module
-│   │           └── util                           utilities
-│   └── resources
-└── test
-```
-You can also build the javadoc with `gradle javadoc`, the API documentation will be generated in `./build/docs/javadoc`.
+extracted from Ghidra startup bat file, add echo somewhere to print the java invocation commands.
 
-# Acknowledgement
-We employ [Ghidra](https://ghidra-sre.org/) as our foundation and frequently leverage [JImmutable Collections](http://brianburton.github.io/java-immutable-collections/) for better performance.  
-Here we would like to thank them for their great help!
++ `-cp` select `<no module>`
++ vm options:
+  ```
+  -XX:ParallelGCThreads=2
+  -XX:CICompilerCount=2
+  -Duser.home="C:\Users\xxx"
+  -Djava.system.class.loader=ghidra.GhidraClassLoader
+  -Dfile.encoding=UTF8
+  -Duser.country=US
+  -Duser.language=en
+  -Duser.variant=
+  -Dsun.java2d.opengl=false
+  -Djdk.tls.client.protocols=TLSv1.2,TLSv1.3
+  -Dcpu.core.limit=
+  -Dcpu.core.override=
+  -Dfont.size.override=
+  -Dpython.console.encoding=UTF-8
+  -Xshare:off
+  --add-opens=java.base/java.lang=ALL-UNNAMED
+  --add-opens=java.base/java.util=ALL-UNNAMED
+  --add-opens=java.base/java.net=ALL-UNNAMED
+  --add-opens=java.desktop/sun.awt.image=ALL-UNNAMED
+  -Dsun.java2d.d3d=false
+  -Dlog4j.skipJansi=true
+  -Xmx2G
+  ```
++ Main class: `ghidra.Ghidra`
++ argument:
+  ```
+  ghidra.app.util.headless.AnalyzeHeadless "C:\Users\xxx\NativeFlowBenchPreAnalysis32\native_complexdata.native_summary\project" "native_summary" -import "C:\Users\xxx\NativeFlowBenchPreAnalysis32\native_complexdata.native_summary\libdata.so" "-postScript" "NativeSummary"
+  ```
++ modify classpath -> include: `C:\<where you install ghidra>\ghidra_10.1.2_PUBLIC\Ghidra\Framework\Utility\lib\Utility.jar`
+
+and finally (optional): 
+
++ before run - external tools - auto-install.bat
+
+intellij will warn about cannot find `ghidra.Ghidra`, you may need to confirm `continue anyway`.
+
+the invocation of ghidra uses `-import`, so will report error (Found conflicting program file) if previous project exists. 
+manually delete files in `project/` before each run.
+
+
+### intellij GUI debug setup
+
+same above, but set cli to `ghidra.GhidraRun`
+
+## limitations
+
+1. multiple lib with inter dependencies.
+1. cannot load string from function's local variable.
+
+### FAQ
+
+1. `> Unable to locate script class: NativeSummary.java` when this error occurs, just delete everything under `"C:\Users\xxx\.ghidra\.ghidra_10.1.2_PUBLIC\osgi\compiled-bundles\"`
+
+### Other useful resources
+
+Thanks to https://github.com/Ayrx/JNIAnalyzer 

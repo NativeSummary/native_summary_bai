@@ -7,6 +7,9 @@ import com.bai.solver.PcodeVisitor;
 import com.bai.solver.Worklist;
 import com.bai.util.Logging;
 import com.bai.util.Utils;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,7 +27,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import org.apache.commons.lang.exception.ExceptionUtils;
+
+import ghidra.util.exception.CancelledException;
+import org.example.nativesummary.util.MyGlobalState;
 import org.javimmutable.collections.JImmutableSet;
 import org.javimmutable.collections.tree.JImmutableTreeMap;
 
@@ -247,7 +252,7 @@ public class Context {
         } else {
             offset = entryLocal.getBase();
         }
-        long taints = TaintMap.getTaints(this, GlobalState.eEntryFunction);
+        long taints = TaintMap.getTaints(null, this, GlobalState.eEntryFunction);
         int unit = GlobalState.arch.getDefaultPointerSize();
         for (int i = 0; i < TAINT_ARGV_COUNT; i++) {
             absEnv.set(ALoc.getALoc(entryLocal, offset + ((long) i * unit), unit), KSet.getTop(taints), true);
@@ -262,16 +267,18 @@ public class Context {
     /**
      * Initialize necessary dataflow facts inside a created context
      * @param caller New abstract environment before entrance into this context
-     * @param isMain Indicate whether this is a context for conventional "main" functions
-     * @return True if the abstract environment before the context entry has been changed, false otherwise 
+     * @param isAnalysisEntry Indicate whether this is a context for conventional "main" functions
+     * @return True if the abstract environment before the context entry has been changed, false otherwise
      */
-    public boolean initContext(AbsEnv caller, boolean isMain) {
+    public boolean initContext(AbsEnv caller, boolean isAnalysisEntry) {
         Function callee = getFunction();
         Address entry = callee.getEntryPoint();
         AbsEnv env = new AbsEnv(caller);
         updateSP(env);
-        if (isMain) {
-            prepareMainAbsEnv(env, callee);
+        if (isAnalysisEntry) {
+            // setup prarmeters. 部分参数可能在栈上，需要先设置好sp，因此需要把初始化放在这里。
+            Function cur = MyGlobalState.currentJNI;
+            MyGlobalState.jnim.setupArg(cur, env, this);
         }
         AbsEnv oldInit = getValueBefore(entry);
 
@@ -365,7 +372,7 @@ public class Context {
 
     /**
      * @hidden
-     */    
+     */
     public static Context getContext(Context prev, Address callSite, Function tf) {
         Context newCtx = new Context(tf);
         System.arraycopy(prev.callstring, 1, newCtx.callstring, 0, GlobalState.config.getCallStringK() - 1);
@@ -413,7 +420,7 @@ public class Context {
 
     /**
      * @hidden
-     */    
+     */
     public static void pushPending(Context ctx) {
         if (!pending.contains(ctx)) {
             pending.push(ctx);
@@ -448,7 +455,7 @@ public class Context {
 
     /**
      * @hidden
-     */    
+     */
     public static boolean isWait(Context ctx) {
         return active.contains(ctx) || pending.contains(ctx);
     }
@@ -456,10 +463,16 @@ public class Context {
     /**
      * @hidden
      * Main entry to drive interprocedural analysis with an entry context
-     */    
-    public static void mainLoop(Context entryCtx) {
+     */
+    public static void mainLoop(Context entryCtx) throws CancelledException, TimeoutException {
         current = entryCtx;
         while (current != null) {
+            // Check for cancel (only work in GUI mode)
+            MyGlobalState.monitor.checkCanceled();
+            // Check for timeout.
+            if (MyGlobalState.isTaskTimeout) {
+                throw new TimeoutException("Operation cancelled");
+            }
             current.loop();
             current = popContext();
             if (current != null) {
@@ -471,21 +484,42 @@ public class Context {
     /**
      * @hidden
      * Main entry to drive interprocedural analysis with an entry context and a timer
-     */    
+     */
     public static void mainLoopTimeout(Context entryCtx, long timeout) {
         Logging.info("Analyze started at " + java.time.LocalTime.now() + " with timout " + timeout + "s");
-        Runnable task = () -> mainLoop(entryCtx);
+        Runnable task = () -> {
+            try {
+                mainLoop(entryCtx);
+            } catch (TimeoutException e) {
+                Logging.warn("Analysis timed out!");
+            } catch (CancelledException e) {
+                Logging.warn("Analysis cancelled by user!");
+            }
+        };
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<?> future = executor.submit(task);
         try {
             future.get(timeout, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
-            Logging.error(ExceptionUtils.getStackTrace(e));
+            Logging.error(getStackTrace(e));
         } catch (TimeoutException e) {
             Logging.error("Timeout at " + java.time.LocalTime.now() + ". Analysis terminated...");
-            future.cancel(true);
+            MyGlobalState.isTaskTimeout = true;
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException ex) {
+                Logging.error(getStackTrace(ex));
+            }
         }
         executor.shutdown();
+    }
+
+    public static String getStackTrace(Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw, true);
+        e.printStackTrace(pw);
+        return sw.getBuffer().toString();
     }
 
 }

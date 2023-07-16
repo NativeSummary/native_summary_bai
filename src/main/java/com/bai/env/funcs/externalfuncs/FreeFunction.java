@@ -15,6 +15,8 @@ import ghidra.program.model.data.VoidDataType;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.pcode.PcodeOp;
 import java.util.Set;
+
+import org.example.nativesummary.env.funcs.JNIFunctionBase;
 import org.javimmutable.collections.JImmutableMap.Entry;
 import org.javimmutable.collections.JImmutableSet;
 
@@ -60,6 +62,7 @@ public class FreeFunction extends ExternalFunctionBase {
 
     @Override
     public void invoke(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv, Context context, Function callFunc) {
+        JNIFunctionBase.recordCall(context, callFunc);
         KSet argKSet = getParamKSet(callFunc, 0, inOutEnv);
         if (!argKSet.isNormal()) {
             return;

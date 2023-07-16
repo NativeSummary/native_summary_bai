@@ -18,8 +18,8 @@ public class Worklist extends PriorityQueue<Address> {
 
         @Override
         public int compare(Address addr0, Address addr1) {
-            int order0 = cfg.getWTOMap().get(addr0);
-            int order1 = cfg.getWTOMap().get(addr1);
+            int order0 = addr0 != null ? cfg.getWTOMap().getOrDefault(addr0, -1) : -1;
+            int order1 = addr1 != null ? cfg.getWTOMap().getOrDefault(addr1, -1) : -1;
             return Integer.compare(order0, order1);
         }
     }

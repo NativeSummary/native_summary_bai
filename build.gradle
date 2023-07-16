@@ -31,7 +31,8 @@ else if (project.hasProperty("GHIDRA_INSTALL_DIR")) {
 }
 
 if (ghidraInstallDir) {
-	apply from: new File(ghidraInstallDir).getCanonicalPath() + "/support/buildExtension.gradle"
+//	apply from: new File(ghidraInstallDir).getCanonicalPath() + "/support/buildExtension.gradle"
+	apply from: "$projectDir/buildExtension.gradle"
 }
 else {
 	throw new GradleException("GHIDRA_INSTALL_DIR is not defined!")
@@ -40,6 +41,7 @@ else {
 
 repositories {
 	mavenCentral()
+	google()
 }
 
 sourceSets {
@@ -120,5 +122,10 @@ dependencies {
 	implementation 'com.google.errorprone:error_prone_annotations:2.10.0'
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2'
 	implementation 'org.apache.logging.log4j:log4j-layout-template-json:2.17.2'
+//	implementation 'io.github.skylot:jadx-core:1.3.5'
+//	// https://mvnrepository.com/artifact/io.github.skylot/jadx-dex-input
+//	runtimeOnly 'io.github.skylot:jadx-dex-input:1.4.2'
+//	// https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+//	testImplementation 'org.slf4j:slf4j-simple:1.7.36'
 	errorprone("com.google.errorprone:error_prone_core:2.10.0")
 }

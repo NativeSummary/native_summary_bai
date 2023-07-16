@@ -109,12 +109,12 @@ public class AbsEnv {
             byte[] buf = GlobalState.flatAPI.getBytes(address, aLoc.len);
             tmp = AbsVal.bytesToAbsVal(Global.getInstance(), buf);
         } catch (MemoryAccessException | AddressOutOfBoundsException e) {
-            tmp = null;
+            tmp = null; // undefined value
         }
         KSet res = new KSet(aLoc.len * 8);
         if (tmp != null) {
             res = res.insert(tmp);
-        }
+        } // else return TOP ??
         return res;
     }
 
@@ -345,11 +345,11 @@ public class AbsEnv {
         return holder.getValueOrNull();
     }
 
-    private void writeEntry(StringBuilder sb, ALoc aLoc, KSet kSet) {
+    public void writeEntry(StringBuilder sb, ALoc aLoc, KSet kSet) {
         sb.append(aLoc).append(" -> ").append(kSet).append("\n");
     }
 
-    private void writeRegEntry(StringBuilder sb, ALoc aLoc, KSet kSet) {
+    public void writeRegEntry(StringBuilder sb, ALoc aLoc, KSet kSet) {
         Register register = GlobalState.currentProgram.getLanguage()
                 .getRegister(GlobalState.flatAPI.getAddressFactory().getRegisterSpace(), aLoc.getBegin(),
                         aLoc.getLen());

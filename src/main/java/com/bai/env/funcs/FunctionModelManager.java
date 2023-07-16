@@ -5,9 +5,7 @@ import com.bai.env.funcs.externalfuncs.CallocFunction;
 import com.bai.env.funcs.externalfuncs.ExternalFunctionBase;
 import com.bai.env.funcs.externalfuncs.FgetcFunction;
 import com.bai.env.funcs.externalfuncs.FgetsFunction;
-import com.bai.env.funcs.externalfuncs.FprintfFunction;
 import com.bai.env.funcs.externalfuncs.FreeFunction;
-import com.bai.env.funcs.externalfuncs.FscanfFunction;
 import com.bai.env.funcs.externalfuncs.GetcFunction;
 import com.bai.env.funcs.externalfuncs.GetenvFunction;
 import com.bai.env.funcs.externalfuncs.GetsFunction;
@@ -15,18 +13,11 @@ import com.bai.env.funcs.externalfuncs.LibcStartMainFunction;
 import com.bai.env.funcs.externalfuncs.MallocFunction;
 import com.bai.env.funcs.externalfuncs.MallocUsableSizeFunction;
 import com.bai.env.funcs.externalfuncs.MemcpyFunction;
-import com.bai.env.funcs.externalfuncs.PrintfFunction;
-import com.bai.env.funcs.externalfuncs.PutsFunction;
 import com.bai.env.funcs.externalfuncs.RandFunction;
 import com.bai.env.funcs.externalfuncs.ReadFunction;
 import com.bai.env.funcs.externalfuncs.ReallocFunction;
 import com.bai.env.funcs.externalfuncs.RecvFunction;
-import com.bai.env.funcs.externalfuncs.ScanfFunction;
-import com.bai.env.funcs.externalfuncs.SnprintfFunction;
-import com.bai.env.funcs.externalfuncs.SprintfFunction;
-import com.bai.env.funcs.externalfuncs.SscanfFunction;
 import com.bai.env.funcs.externalfuncs.StrcatFunction;
-import com.bai.env.funcs.externalfuncs.StrchrFunction;
 import com.bai.env.funcs.externalfuncs.StrcpyFunction;
 import com.bai.env.funcs.externalfuncs.StrlenFunction;
 import com.bai.env.funcs.externalfuncs.StrncpyFunction;
@@ -39,6 +30,9 @@ import com.bai.util.Logging;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.symbol.Namespace;
+import org.example.nativesummary.env.funcs.CLibarayFunctions;
+import org.example.nativesummary.env.funcs.JNIFunctionBase;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,20 +67,23 @@ public class FunctionModelManager {
             new RecvFunction(),
             new GetenvFunction(),
             new RandFunction(),
-            // Taint source functions with varargs
-            new ScanfFunction(),
-            new SscanfFunction(),
-            new FscanfFunction(),
-            new StrchrFunction(),
-            // varargs functions
-            new PrintfFunction(),
-            new SnprintfFunction(),
-            new FprintfFunction(),
-            new SprintfFunction(),
+// Too Complex to model
+//            // Taint source functions with varargs
+//            new ScanfFunction(),
+//            new SscanfFunction(),
+//            new FscanfFunction(),
+//            new StrchrFunction(),
+//            // varargs functions
+//            new PrintfFunction(),
+//            new SnprintfFunction(),
+//            new FprintfFunction(),
+//            new SprintfFunction(),
             // stdlib
             new MemcpyFunction(),
             new AtoiFunction(),
-            new PutsFunction()
+//            new PutsFunction(),
+            new JNIFunctionBase(),
+            new CLibarayFunctions()
     );
 
     private static List<String> stdNameSpaceStringList = List.of("std");

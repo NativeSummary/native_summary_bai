@@ -385,4 +385,9 @@ public class Utils {
             return null;
         }
     }
+
+    public static String offset2reg32(int offset) {
+        int ind = (offset-0x20)/4;
+        return "r"+String.valueOf(ind);
+    }
 }

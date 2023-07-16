@@ -1,9 +1,13 @@
 package com.bai.solver;
 
-import com.bai.env.AbsEnv;
-import com.bai.env.Context;
+import com.bai.env.*;
 import com.bai.util.GlobalState;
+import com.bai.util.Logging;
 import ghidra.program.model.listing.Function;
+import ghidra.util.exception.CancelledException;
+import org.example.nativesummary.util.MyGlobalState;
+
+import java.util.concurrent.TimeoutException;
 
 /**
  * The class for interprocedural analysis.
@@ -27,12 +31,25 @@ public class InterSolver {
     /**
      * The driver function for the interprocedural analysis  
      */
-    public void run() {
+    public void run() throws CancelledException {
         Context mainContext = Context.getEntryContext(entry);
-        mainContext.initContext(new AbsEnv(), isMain);
+
+        // is JNI_OnLoad, then set onLoadContext
+        if (MyGlobalState.currentJNI.equals(MyGlobalState.onLoad)) {
+            MyGlobalState.onLoadContext = mainContext;
+        }
+
+        AbsEnv e = MyGlobalState.onLoadEnv == null ? new AbsEnv() : new AbsEnv(MyGlobalState.onLoadEnv);
+
+        mainContext.initContext(e, true);
         int timeout = GlobalState.config.getTimeout();
         if (timeout < 0) {
-            Context.mainLoop(mainContext);
+            try {
+                Context.mainLoop(mainContext);
+            } catch (TimeoutException ex) {
+                Logging.error("Unexpected timeout!");
+                throw new RuntimeException(ex);
+            }
         } else {
             Context.mainLoopTimeout(mainContext, timeout);
         }

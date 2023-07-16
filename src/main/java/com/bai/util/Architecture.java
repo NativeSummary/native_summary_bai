@@ -132,6 +132,10 @@ public class Architecture {
         return processor.equalsIgnoreCase("x86");
     }
 
+    public boolean isArm32() { return processor.equalsIgnoreCase("ARM"); }
+    public boolean isAArch64() { return processor.equalsIgnoreCase("AARCH64"); }
+    public boolean isArmSeries() { return isArm32() || isAArch64(); }
+
     /**
      * Get the KSet of pc register.
      * @param currentAddress address of current instruction.

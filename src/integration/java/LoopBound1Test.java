@@ -7,6 +7,8 @@ import com.bai.env.region.Reg;
 import com.bai.util.GlobalState;
 import com.bai.util.Logging;
 import java.io.File;
+
+import ghidra.util.exception.CancelledException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,7 +62,7 @@ public class LoopBound1Test {
         }
 
         @Test
-        public void test_loop() {
+        public void test_loop() throws CancelledException {
             analyzeFromMain(program);
             for (Context ctx : Context.getPool().keySet()) {
                 Logging.debug(ctx.toString());
@@ -117,7 +119,7 @@ public class LoopBound1Test {
         }
 
         @Test
-        public void test_loop() {
+        public void test_loop() throws CancelledException {
             analyzeFromMain(program);
             for (Context ctx : Context.getPool().keySet()) {
                 Logging.debug(ctx.toString());

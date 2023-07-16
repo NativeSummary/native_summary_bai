@@ -9,7 +9,6 @@ dist/
 .vscode/
 .idea/
 ghidra_test/
-*.sh
 gradle.properties
 .editorconfig
 /src/integration/resources/binaries

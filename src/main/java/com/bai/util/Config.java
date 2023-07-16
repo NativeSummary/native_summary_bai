@@ -53,9 +53,10 @@ public class Config {
             System.out.println("        [-entry <address>]");
             System.out.println("        [-externalMap <file>]");
             System.out.println("        [-json]");
-            System.out.println("        [-disableZ3]");
+            System.out.println("        [-enableZ3]");
             System.out.println("        [-all]");
             System.out.println("        [-debug]");
+            System.out.println("        [-noCalleeSavedReg]");
             System.out.println("        [-check \"<cweNo1>[;<cweNo2>...]\"]");
         }
 
@@ -87,12 +88,14 @@ public class Config {
                         config.setExternalMapPath(args[++argi]);
                     } else if (arg.equalsIgnoreCase("-json")) {
                         config.setOutputJson(true);
-                    } else if (arg.equalsIgnoreCase("-disableZ3")) {
-                        config.setEnableZ3(false);
+                    } else if (arg.equalsIgnoreCase("-enableZ3")) {
+                        config.setEnableZ3(true);
                     } else if (arg.equalsIgnoreCase("-all")) {
                         CheckerManager.loadAllCheckers(config);
                     } else if (arg.equalsIgnoreCase("-debug")) {
                         config.setDebug(true);
+                    } else if (arg.equalsIgnoreCase("-noCalleeSavedReg")) {
+                        config.setNoCalleeSavedReg(true);
                     } else if (checkArgument("-check", args, argi)) {
                         String[] checkers = getSubArguments(args, argi);
                         Arrays.stream(checkers)
@@ -113,7 +116,7 @@ public class Config {
 
     private static final int DEFAULT_Z3_TIMEOUT = 1000; // unit in millisecond
 
-    private static final int DEFAULT_CALLSTRING_K = 3;
+    private static final int DEFAULT_CALLSTRING_K = 1;
 
     private static final int DEFAULT_K = 50;
 
@@ -142,6 +145,8 @@ public class Config {
 
     private boolean isGUI;
 
+    private boolean noCalleeSavedReg;
+
     // for tactic tuning, see:
     // http://www.cs.tau.ac.il/~msagiv/courses/asv/z3py/strategies-examples.htm
     private List<String> z3Tactics = new ArrayList<>();
@@ -155,8 +160,9 @@ public class Config {
         this.z3TimeOut = DEFAULT_Z3_TIMEOUT; // ms
         this.timeout = DEFAULT_TIMEOUT;
         this.entryAddress = null;
-        this.isEnableZ3 = true;
+        this.isEnableZ3 = false;
         this.externalMapPath = null;
+        this.noCalleeSavedReg = false;
     }
 
     /**
@@ -350,11 +356,20 @@ public class Config {
         this.isGUI = isGUI;
     }
 
+    public void setNoCalleeSavedReg(boolean noCalleeSavedReg) {
+        this.noCalleeSavedReg = noCalleeSavedReg;
+    }
+
+    public boolean getNoCalleeSavedReg() {
+        return noCalleeSavedReg;
+    }
+
     @Override
     public String toString() {
         return "Config{"
                 + "z3TimeOut=" + z3TimeOut
                 + ", isDebug=" + isDebug
+                + ", noCalleeSavedReg=" + noCalleeSavedReg
                 + ", isOutputJson=" + isOutputJson
                 + ", K=" + K
                 + ", callStringK=" + callStringK

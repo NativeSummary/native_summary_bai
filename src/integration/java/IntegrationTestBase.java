@@ -8,6 +8,7 @@ import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
 import ghidra.test.AbstractGhidraHeadlessIntegrationTest;
+import ghidra.util.exception.CancelledException;
 import ghidra.util.task.TaskMonitorAdapter;
 import com.bai.env.Context;
 import com.bai.solver.InterSolver;
@@ -48,7 +49,7 @@ public abstract class IntegrationTestBase extends AbstractGhidraHeadlessIntegrat
         return program;
     }
 
-    protected void analyzeFromMain(Program program) {
+    protected void analyzeFromMain(Program program) throws CancelledException {
         List<Function> functions = program.getListing().getGlobalFunctions("main");
         assert functions.size() == 1 : "Multiple functions with the name \"main\"";
         Function mainFunction = functions.get(0);
@@ -56,7 +57,7 @@ public abstract class IntegrationTestBase extends AbstractGhidraHeadlessIntegrat
         solver.run();
     }
 
-    protected void analyzeFromAddress(Program program, Address address) {
+    protected void analyzeFromAddress(Program program, Address address) throws CancelledException {
         Function startFunction = GlobalState.flatAPI.getFunctionAt(address);
         InterSolver solver = new InterSolver(startFunction, false);
         solver.run();

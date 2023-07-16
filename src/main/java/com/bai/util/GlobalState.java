@@ -7,13 +7,11 @@ import com.bai.env.TaintMap;
 import com.bai.env.funcs.FunctionModelManager;
 import com.bai.env.region.Heap;
 import com.bai.env.region.Local;
+import com.bai.solver.CFG;
 import ghidra.app.script.GhidraScript;
+import ghidra.program.flatapi.FlatProgramAPI;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
-
-import com.bai.solver.CFG;
-
-import ghidra.program.flatapi.FlatProgramAPI;
 
 /**
  * Global state of current analysis.

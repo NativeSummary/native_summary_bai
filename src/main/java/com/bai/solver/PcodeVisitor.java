@@ -14,6 +14,7 @@ import com.bai.env.region.Global;
 import com.bai.env.region.Local;
 import com.bai.env.region.Reg;
 import com.bai.env.funcs.stdfuncs.CppStdModelBase;
+import com.bai.env.region.RegionBase;
 import com.bai.util.GlobalState;
 import com.bai.util.Logging;
 import com.bai.util.Utils;
@@ -25,8 +26,7 @@ import ghidra.program.model.listing.Instruction;
 import ghidra.program.model.mem.MemoryBlock;
 import ghidra.program.model.pcode.PcodeOp;
 import ghidra.program.model.pcode.Varnode;
-import com.bai.checkers.IntegerOverflowUnderflow;
-import com.bai.checkers.MemoryCorruption;
+
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,6 +34,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.example.nativesummary.env.funcs.CLibarayFunctions;
+import org.example.nativesummary.env.funcs.JNIFunctionBase;
+import org.example.nativesummary.util.Architechture;
+import org.example.nativesummary.util.MyGlobalState;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javimmutable.collections.JImmutableMap;
@@ -437,6 +442,10 @@ public class PcodeVisitor {
         if (externalFunction != null) {
             Logging.debug("Invoke external function model: " + funcName);
             externalFunction.invoke(pcode, inOutEnv, tmpEnv, context, callee);
+        } else {
+            if (!CLibarayFunctions.noModelSymbols.contains(funcName)) {
+                MyGlobalState.warner.warnNoExtModel(funcName);
+            }
         }
         if (GlobalState.arch.isX86()) {
             // pop return address on stack
@@ -474,6 +483,7 @@ public class PcodeVisitor {
     private KSet loadPtr(AbsVal ptr, KSet inKSet, AbsEnv absEnv, Varnode dst) {
         ALoc aLoc = ALoc.getALoc(ptr.getRegion(), ptr.getValue(), dst.getSize());
         KSet srcKSet = absEnv.get(aLoc);
+        if (srcKSet.isBot()) { MyGlobalState.warner.infoBottomLoaded(aLoc.toString()+" at "+context.toString()); }
         KSet outKSet = inKSet.join(srcKSet);
         return (outKSet == null) ? inKSet : outKSet;
     }
@@ -522,19 +532,19 @@ public class PcodeVisitor {
             return;
         }
         // CWE476: Null Pointer Dereference
-        MemoryCorruption.checkNullPointerDereference(srcPtrKSet, address, context, null, MemoryCorruption.TYPE_READ, 0);
+//        MemoryCorruption.checkNullPointerDereference(srcPtrKSet, address, context, null, MemoryCorruption.TYPE_READ, 0);
         for (AbsVal ptr : srcPtrKSet) {
             if (ptr.isBigVal()) {
                 continue;
             }
-            if (ptr.getRegion().isHeap()) {
-                // CWE416: Use After Free
-                MemoryCorruption.checkUseAfterFree(ptr, address, context, null, MemoryCorruption.TYPE_READ);
-            }
-            if (ptr.getRegion().isHeap() || ptr.getRegion().isLocal()) {
-                // CWE125: Out-of-bounds Read
-                MemoryCorruption.checkOutOfBound(ptr, address, context, null, MemoryCorruption.TYPE_READ);
-            }
+//            if (ptr.getRegion().isHeap()) {
+//                // CWE416: Use After Free
+//                MemoryCorruption.checkUseAfterFree(ptr, address, context, null, MemoryCorruption.TYPE_READ);
+//            }
+//            if (ptr.getRegion().isHeap() || ptr.getRegion().isLocal()) {
+//                // CWE125: Out-of-bounds Read
+//                MemoryCorruption.checkOutOfBound(ptr, address, context, null, MemoryCorruption.TYPE_READ);
+//            }
             List<AbsVal> adjustedPtrs = Utils.adjustLocalAbsVal(ptr, context, srcPtrKSet.getBits());
             if (adjustedPtrs.isEmpty()) {
                 // not adjusted
@@ -566,21 +576,21 @@ public class PcodeVisitor {
 
         Address address = Utils.getAddress(pcode);
         // CWE476: Null Pointer Dereference
-        MemoryCorruption.checkNullPointerDereference(dstPtrKSet, address, context, null, MemoryCorruption.TYPE_WRITE,
-                0);
+//        MemoryCorruption.checkNullPointerDereference(dstPtrKSet, address, context, null, MemoryCorruption.TYPE_WRITE,
+//                0);
 
         for (AbsVal ptr : dstPtrKSet) {
             if (ptr.isBigVal()) {
                 continue;
             }
-            if (ptr.getRegion().isHeap()) {
-                // CWE416: Use After Free
-                MemoryCorruption.checkUseAfterFree(ptr, address, context, null, MemoryCorruption.TYPE_WRITE);
-            }
-            if (ptr.getRegion().isHeap() || ptr.getRegion().isLocal()) {
-                // CWE787: Out-of-bounds Write check
-                MemoryCorruption.checkOutOfBound(ptr, address, context, null, MemoryCorruption.TYPE_WRITE);
-            }
+//            if (ptr.getRegion().isHeap()) {
+//                // CWE416: Use After Free
+//                MemoryCorruption.checkUseAfterFree(ptr, address, context, null, MemoryCorruption.TYPE_WRITE);
+//            }
+//            if (ptr.getRegion().isHeap() || ptr.getRegion().isLocal()) {
+//                // CWE787: Out-of-bounds Write check
+//                MemoryCorruption.checkOutOfBound(ptr, address, context, null, MemoryCorruption.TYPE_WRITE);
+//            }
             // Adjust local AbsVal after check.
             List<AbsVal> adjustedPtrs = Utils.adjustLocalAbsVal(ptr, context, dstPtrKSet.getBits());
             if (adjustedPtrs.isEmpty()) {
@@ -606,12 +616,22 @@ public class PcodeVisitor {
         if (target.isAddress()) {
             dstAddress = target.getAddress();
         }
+        // detect tail call
+        Function external = org.example.nativesummary.util.Utils.getExternalFunctionAt(dstAddress, srcAddress);
+        if (external != null) {
+            MyGlobalState.warner.infoTailCall(srcAddress.toString());
+            pcode.setOpcode(PcodeOp.CALL);
+            visit_CALL(pcode, inOutEnv, tmpEnv);
+            visit_RETURN(null, inOutEnv, tmpEnv);
+            return;
+        }
+
         cfg.addEdge(srcAddress, dstAddress);
         cfg.refresh();
     }
 
     public void visit_CBRANCH(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv) {
-        if (!isLastPcodeOfInstruction(pcode)) {
+        if (!isLastPcodeOfInstruction(pcode)) { // 这是什么情况？ TODO
             Varnode target = pcode.getInput(0);
             Varnode condition = pcode.getInput(1);
             Address address = target.getAddress();
@@ -652,18 +672,31 @@ public class PcodeVisitor {
 
     public void visit_BRANCHIND(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv) {
         Varnode offset = pcode.getInput(0);
-        KSet offsetKSet = getKSet(offset, inOutEnv, tmpEnv, pcode);
-        if (offsetKSet.isTop()) {
+        KSet targetKSet = getKSet(offset, inOutEnv, tmpEnv, pcode);
+        if (targetKSet.isTop()) {
             return;
         }
         CFG cfg = CFG.getCFG(context.getFunction());
         Address currentAddress = Utils.getAddress(pcode);
-        for (AbsVal offsetVal : offsetKSet) {
+        for (AbsVal offsetVal : targetKSet) {
             if (offsetVal.getRegion().isGlobal() && !offsetVal.isBigVal()) {
-                Address targetAddress = currentAddress.getNewAddress(currentAddress.getOffset() + offsetVal.getValue());
+                Address targetAddress = currentAddress.getNewAddress(offsetVal.getValue());
+
+                // detect tail call
+                Function external = org.example.nativesummary.util.Utils.getExternalFunctionAt(targetAddress, currentAddress);
+                if (external != null) {
+                    MyGlobalState.warner.infoTailCall(currentAddress.toString());
+                    pcode.setOpcode(PcodeOp.CALLIND);
+                    visit_CALLIND(pcode, inOutEnv, tmpEnv);
+                    visit_RETURN(null, inOutEnv, tmpEnv);
+                    return;
+                }
+
                 MemoryBlock block = GlobalState.flatAPI.getMemoryBlock(targetAddress);
                 if (block != null && block.isExecute()) {
                     cfg.addEdge(currentAddress, targetAddress);
+                } else {
+                    Logging.warn("visit_BRANCHIND: cannot find block at "+targetAddress);
                 }
             }
         }
@@ -673,6 +706,7 @@ public class PcodeVisitor {
     public void visit_CALL(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv) {
         Address targetAddress = pcode.getInput(0).getAddress();
         final Address callSite = Utils.getAddress(pcode);
+//        GlobalState.addOutOfRangeCall(callSite, context.getFunction());
         Function callee = GlobalState.flatAPI.getFunctionAt(targetAddress);
 
         if (callee.isThunk()) {
@@ -681,7 +715,8 @@ public class PcodeVisitor {
 
         if (callee.isExternal() || FunctionModelManager.isFunctionAddressMapped(targetAddress)) {
             defineExternalFunctionSignature(pcode, inOutEnv, tmpEnv, callee);
-            MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
+//            MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
+            JNIFunctionBase.currentCallSite = callSite;
             Status status = invokeExternal(pcode, inOutEnv, tmpEnv, callee);
             if (status.noReturn) {
                 jumpOut = true;
@@ -692,7 +727,7 @@ public class PcodeVisitor {
         if (FunctionModelManager.isStd(callee)) { // TODO: support mapping address to std model
             Logging.debug("Calling C++ STL: " + callee.getName(true));
             defineStdFunctionSignature(pcode, inOutEnv, tmpEnv, callee);
-            MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
+//            MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
             Status status = invokeStd(pcode, inOutEnv, tmpEnv, callee);
             if (status.noReturn) {
                 jumpOut = true;
@@ -722,22 +757,50 @@ public class PcodeVisitor {
             if (isUpdated) {
                 context.insertToWorklist(callSite);
                 switchContext = true;
-                if (context.equals(newContext)) {
+                if (context.equals(newContext)) { // 递归函数
                     Context.pushActive(context);
                 } else {
                     Context.pushPending(context);
                     Context.pushActive(newContext);
                 }
-            } else if (exit.isEmpty()) {
+            } else if (exit.isEmpty()) { // 可能是那边调用结束回来，但是怎么没有函数的分析结果？再回去继续分析吧。
                 switchContext = true;
-                if (context.equals(newContext)) {
+                if (context.equals(newContext)) { // 递归函数
                     Context.pushActive(context);
                 } else {
                     Context.pushPending(context);
                     Context.pushActive(newContext);
                 }
-            } else {
-                for (JImmutableMap.Entry<ALoc, KSet> entry : exit) {
+            } else { // 这才是那边调用结束回来。
+                // only pass parts of the stack back.
+                for (JImmutableMap.Entry<ALoc, KSet> entry : exit) { // 返回值的更新 尤其是寄存器
+                    RegionBase reg = entry.getKey().getRegion();
+                    Function current = context.getFunction();
+                    if (reg.isLocal()) {
+                        boolean skip = true;
+                        Function func = ((Local)reg).getFunction();
+                        if (func.equals(current)) {
+                            skip = false;
+                        } else {
+                            for (Function f: context.getFuncs()) {
+                                if (current.equals(f)) {
+                                    skip = false; break;
+                                }
+                            }
+                        }
+                        if (skip) {
+                            continue;
+                        }
+                    }
+                    if (!GlobalState.config.getNoCalleeSavedReg()) {
+                        // callee saved register not overwriting
+                        if (GlobalState.arch.isArm32() && Architechture.isArm32SavedRegister(entry.getKey())) {
+                            continue;
+                        }
+                        if (GlobalState.arch.isAArch64() && Architechture.isAArch64SavedRegister(entry.getKey())) {
+                            continue;
+                        }
+                    }
                     inOutEnv.set(entry.getKey(), entry.getValue(), true);
                 }
             }
@@ -759,6 +822,7 @@ public class PcodeVisitor {
 
         Set<Pair<Function, Address>> functionSet = new HashSet<>();
         Address callSite = Utils.getAddress(pcode);
+//        GlobalState.addOutOfRangeCall(callSite, context.getFunction());
         for (AbsVal targetVal : targetKSet) {
             if (!targetVal.getRegion().isGlobal() || targetVal.isBigVal()) {
                 continue;
@@ -799,7 +863,8 @@ public class PcodeVisitor {
             if (callee.isExternal() || FunctionModelManager.isFunctionAddressMapped(targetAddress)) {
                 defineExternalFunctionSignature(pcode, inOutEnv, tmpEnv, callee);
                 // CWE119, CWE416, CWE416, CWE476
-                MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
+//                MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
+                JNIFunctionBase.currentCallSite = callSite;
                 status = invokeExternal(pcode, inOutEnv, tmpEnv, callee);
                 if (status == null) {
                     continue;
@@ -810,7 +875,7 @@ public class PcodeVisitor {
             } else if (FunctionModelManager.isStd(callee)) { // TODO: support mapping address to std model
                 defineStdFunctionSignature(pcode, inOutEnv, tmpEnv, callee);
                 // CWE119, CWE416, CWE416, CWE476
-                MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
+//                MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
                 status = invokeStd(pcode, inOutEnv, tmpEnv, callee);
                 if (status == null) {
                     continue;
@@ -877,6 +942,15 @@ public class PcodeVisitor {
 
         if (isFinished) {
             for (JImmutableTreeMap.Entry<ALoc, KSet> entry : resEnv.getEnvMap()) {
+                if (GlobalState.config.getNoCalleeSavedReg()) {
+                    // callee saved register not overwriting
+                    if (GlobalState.arch.isArm32() && Architechture.isArm32SavedRegister(entry.getKey())) {
+                        continue;
+                    }
+                    if (GlobalState.arch.isAArch64() && Architechture.isAArch64SavedRegister(entry.getKey())) {
+                        continue;
+                    }
+                }
                 inOutEnv.set(entry.getKey(), entry.getValue(), true);
             }
         }
@@ -897,16 +971,16 @@ public class PcodeVisitor {
                     if (adjustedKSet != null) {
                         inOutEnv.set(aLoc, adjustedKSet, true);
                     }
-                } else {
+                } else { // 销毁sp
                     inOutEnv.set(aLoc, KSet.getBot(aLoc.getLen() * 8), true);
                 }
             } else if (aLoc.getRegion().isLocal()) {
                 Function localFunction = ((Local) aLoc.getRegion()).getFunction();
                 Function currentFunction = context.getFunction();
-                if (localFunction == currentFunction) {
+                if (localFunction == currentFunction) { // 销毁当前函数的Local里的所有值
                     inOutEnv.set(aLoc, KSet.getBot(aLoc.getLen() * 8), true);
                 }
-            }
+            } // 其他的不动
         }
 
         AbsEnv oldExitEnv = new AbsEnv(context.getExitValue());
@@ -1034,7 +1108,7 @@ public class PcodeVisitor {
         setKSet(dst, resKSet, inOutEnv, tmpEnv, true);
         updateLocalSize(dst, resKSet);
         // CWE190: Integer Overflow
-        IntegerOverflowUnderflow.checkTaint(op1KSet, op2KSet, pcode, true);
+//        IntegerOverflowUnderflow.checkTaint(op1KSet, op2KSet, pcode, true);
     }
 
     public void visit_INT_SUB(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv) {
@@ -1149,7 +1223,7 @@ public class PcodeVisitor {
         setKSet(dst, resKSet, inOutEnv, tmpEnv, true);
         updateLocalSize(dst, resKSet);
         // CWE190: Integer Overflow
-        IntegerOverflowUnderflow.checkTaint(op1KSet, op2KSet, pcode, true);
+//        IntegerOverflowUnderflow.checkTaint(op1KSet, op2KSet, pcode, true);
     }
 
     public void visit_INT_RIGHT(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv) {
@@ -1187,7 +1261,7 @@ public class PcodeVisitor {
         setKSet(dst, resKSet, inOutEnv, tmpEnv, true);
         updateLocalSize(dst, resKSet);
         // CWE190: Integer Overflow
-        IntegerOverflowUnderflow.checkTaint(op1KSet, op2KSet, pcode, true);
+//        IntegerOverflowUnderflow.checkTaint(op1KSet, op2KSet, pcode, true);
     }
 
     public void visit_INT_DIV(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv) {
@@ -1451,6 +1525,8 @@ public class PcodeVisitor {
     }
 
     public boolean visit(Address address) {
+        // static code coverage.
+        MyGlobalState.coverage.add(address);
         Function func = GlobalState.flatAPI.getFunctionContaining(address);
         Instruction instruction = GlobalState.flatAPI.getInstructionAt(address);
         if (instruction == null) {
@@ -1460,6 +1536,15 @@ public class PcodeVisitor {
         AbsEnv inEnv = context.getValueBefore(address);
         Logging.debug("Visit Inst: " + instruction
                 + " @ " + Integer.toHexString((int) address.getOffset()) + " in " + funcName);
+        if (! context.getFunction().equals(func)) {
+            // TODO better warning ?
+            String addrstr = "0x"+Long.toHexString(address.getOffset());
+            String current = func == null ? addrstr : func.toString();
+            Function containing = context.getFunction();
+            if (!MyGlobalState.warner.hasWarnedOutOfRange(current, containing)) {
+                Logging.warn(String.format("Func out of range: %s(%s) but context func is %s !", current, addrstr, containing));
+            }
+        }
         AbsEnv outEnv = new AbsEnv(inEnv);
         AbsEnv tmpEnv = new AbsEnv();
 
