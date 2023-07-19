@@ -155,7 +155,7 @@ public class SummaryExporter extends CheckerBase {
             for (ALoc aloc: alocs) {
                 KSet ks = env.get(aloc);
 
-                // register natives.
+                // handle RegisterNatives.
                 if (p.getDataType().getName().equals("JNINativeMethod *")) {
                     for (AbsVal val: ks) {
                         if (val.getRegion().isGlobal()) {
@@ -650,6 +650,10 @@ public class SummaryExporter extends CheckerBase {
     public void onStartFunc(org.example.nativesummary.ir.Function irFunc) {
         current = irFunc;
         jvMap = new HashMap<>();
+    }
+
+    public boolean hasDynamicRegister() {
+        return dynRegName.size() != 0;
     }
 
     public List<Map.Entry<Function, org.example.nativesummary.ir.Function>> handleDynamicRegister() throws InvalidInputException, DuplicateNameException {

@@ -505,8 +505,10 @@ public class Context {
             Logging.error(getStackTrace(e));
         } catch (TimeoutException e) {
             Logging.error("Timeout at " + java.time.LocalTime.now() + ". Analysis terminated...");
+            // interrupt using our own flag
             MyGlobalState.isTaskTimeout = true;
             try {
+                // wait for exit.
                 future.get();
             } catch (InterruptedException | ExecutionException ex) {
                 Logging.error(getStackTrace(ex));

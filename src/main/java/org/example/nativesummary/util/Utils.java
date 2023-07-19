@@ -26,9 +26,7 @@ import ghidra.util.task.TaskMonitor;
 import org.example.nativesummary.ir.Instruction;
 
 import java.io.ByteArrayOutputStream;
-import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 public class Utils {
 
@@ -203,5 +201,26 @@ public class Utils {
 
     public static ALoc toALoc(AbsVal val, int size) {
         return ALoc.getALoc(val.getRegion(), val.getValue(), size);
+    }
+
+    public static Set<Function> getListKeySet(List<Map.Entry<Function,org.example.nativesummary.ir.Function>> funcsToAnalyze) {
+        Set<Function> ret = new HashSet<>();
+        for (Map.Entry<Function,org.example.nativesummary.ir.Function> e: funcsToAnalyze) {
+            ret.add(e.getKey());
+        }
+        return ret;
+    }
+
+    public static List<Map.Entry<Function,org.example.nativesummary.ir.Function>> dedupList(Set<Function> funcsSet, List<Map.Entry<Function,org.example.nativesummary.ir.Function>> entries) {
+        List<Map.Entry<Function,org.example.nativesummary.ir.Function>> ret = new ArrayList<>();
+        for (Map.Entry<Function,org.example.nativesummary.ir.Function> e: entries) {
+            if (!funcsSet.contains(e.getKey())) {
+                funcsSet.add(e.getKey());
+                ret.add(e);
+            } else {
+                Logging.error("Function duplicate registered: "+e.getKey().getName() +", to " + e.getValue().toString());
+            }
+        }
+        return ret;
     }
 }

@@ -49,8 +49,7 @@ public class MyGlobalState {
     public static AbsEnv onLoadEnv;
 
     public static WarningDeduplicator warner;
-    public static Set<Address> coverage = new HashSet<>();
-    public static Set<Address> staticCoverage = new HashSet<>();
+    public static Coverage cov;
 
 
     public static void reset(GhidraScript main) {
@@ -71,9 +70,8 @@ public class MyGlobalState {
         onLoadEnv = null;
         warner = new WarningDeduplicator();
         monitor = main.getMonitor();
-        isTaskTimeout = true;
-        coverage.clear();
-        staticCoverage.clear();
+        isTaskTimeout = false;
+        cov = null;
     }
 
     public static void onStartOne(Function f, org.example.nativesummary.ir.Function irFunc) {
@@ -83,8 +81,7 @@ public class MyGlobalState {
         se.onStartFunc(irFunc);
         warner.onStartOne();
         isTaskTimeout = false;
-        coverage.clear();
-        staticCoverage.clear();
+        cov = new Coverage();
     }
 
     public static void onFinishOne() {

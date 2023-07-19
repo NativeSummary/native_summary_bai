@@ -8,6 +8,7 @@ from shutil import rmtree
 
 # project_folder binary_path
 GHIDRA_DIR = os.getenv("GHIDRA_INSTALL_DIR", "/opt/ghidra_10.1.2_PUBLIC")
+GHIDRA_NS_ARGS = os.getenv("GHIDRA_NS_ARGS", None)
 
 
 if sys.platform == 'win32':
@@ -17,7 +18,9 @@ else:
     tee_template = 'bash -c "{} | tee {}"'
     cmd = GHIDRA_DIR + '/support/analyzeHeadless {} native_summary -import {} -postScript NativeSummary'
 
-
+if GHIDRA_NS_ARGS is not None:
+    cmd += " "
+    cmd += GHIDRA_NS_ARGS
 
 def analyze_one(p, proj_path):
     os.makedirs(proj_path, exist_ok=True)

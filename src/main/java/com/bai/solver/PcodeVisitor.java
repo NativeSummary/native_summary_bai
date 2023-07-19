@@ -1527,10 +1527,14 @@ public class PcodeVisitor {
     }
 
     public boolean visit(Address address) {
-        // static code coverage.
-        MyGlobalState.coverage.add(address);
-        Function func = GlobalState.flatAPI.getFunctionContaining(address);
-        Instruction instruction = GlobalState.flatAPI.getInstructionAt(address);
+        Function func = null;
+        Instruction instruction = null;
+        if (address != null) {
+            // static code coverage.
+            MyGlobalState.cov.visit(address);
+            func = GlobalState.flatAPI.getFunctionContaining(address);
+            instruction = GlobalState.flatAPI.getInstructionAt(address);
+        }
         if (instruction == null) {
             return false;
         }

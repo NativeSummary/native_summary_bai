@@ -11,11 +11,22 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Coverage {
-    public static void calcStaticCoverage(Set<Address> coverage, Function entry, FlatProgramAPI api, Set<Function> visited) {
+
+    public Set<Address> staticCoverage;
+    public Set<Address> coverage;
+    public double percentage;
+
+    public Coverage() {
+        this.staticCoverage = new HashSet<>();
+        this.coverage = new HashSet<>();
+    }
+
+    public void calcStaticCoverage(Function entry, FlatProgramAPI api, Set<Function> visited) {
+
         BasicBlockModel bbm = new BasicBlockModel(api.getCurrentProgram());
         try {
             for (CodeBlock b: bbm.getCodeBlocksContaining(entry.getBody(), api.getMonitor())) {
-                coverage.add(b.getFirstStartAddress());
+                staticCoverage.add(b.getFirstStartAddress());
             }
         } catch (CancelledException e) {
             throw new RuntimeException(e);
@@ -28,15 +39,31 @@ public class Coverage {
         for (Function func: call_funcs) {
             if (!visited.contains(func)) {
                 visited.add(func);
-                calcStaticCoverage(coverage, func, api, visited);
+                calcStaticCoverage(func, api, visited);
             }
         }
     }
 
-    public static String getCoverageStatstic(Set<Address> staticCoverage, Set<Address> coverage) {
+    public String getCoverageStatstic() {
         coverage.retainAll(staticCoverage);
-        double percentage = ((double) coverage.size()) / staticCoverage.size();
+        percentage = ((double) coverage.size()) / staticCoverage.size();
         Set<Address> uncovered = new HashSet<>(staticCoverage); uncovered.removeAll(coverage);
         return String.format("%d/%d (%f), sample uncovered addresses: ", coverage.size(), staticCoverage.size(), percentage) + (uncovered.size() > 0 ? uncovered.iterator().next().toString() : "none");
+    }
+
+    public void visit(Address address) {
+        this.coverage.add(address);
+    }
+
+    public Set<Address> getStaticCoverage() {
+        return staticCoverage;
+    }
+
+    public Set<Address> getCoverage() {
+        return coverage;
+    }
+
+    public double getPercentage() {
+        return percentage;
     }
 }

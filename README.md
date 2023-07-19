@@ -89,3 +89,8 @@ same above, but set cli to `ghidra.GhidraRun`
 ### Other useful resources
 
 Thanks to https://github.com/Ayrx/JNIAnalyzer 
+
+### Timeout & Cancel
+
+- `MyGlobalState.isTaskTimeout` controls timeout for single JNI fucntion.
+- `MyGlobalState.monitor.checkCanceled()` corresponds to user interface's cancel in GUI mode. In headless mode, the taskmonitor becomes dummy, and this is why we need a seperate flag for timeout.

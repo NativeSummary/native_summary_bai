@@ -370,7 +370,7 @@ public class Config {
         return "Config{"
                 + "z3TimeOut=" + z3TimeOut
                 + ", isDebug=" + isDebug
-                + ", noCalleeSavedReg=" + noOpt
+                + ", noOpt=" + noOpt
                 + ", isOutputJson=" + isOutputJson
                 + ", K=" + K
                 + ", callStringK=" + callStringK

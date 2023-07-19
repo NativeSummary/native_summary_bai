@@ -18,15 +18,18 @@ import org.example.nativesummary.util.Coverage;
 import org.example.nativesummary.util.EnvSetup;
 import org.example.nativesummary.util.MyGlobalState;
 import org.apache.commons.lang3.StringUtils;
+import org.example.nativesummary.util.Statistics;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.nio.file.Paths;
+import java.sql.Time;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class NativeSummary extends BinAbsInspector {
     public static final int TIMEOUT = 300;
@@ -68,6 +71,7 @@ public class NativeSummary extends BinAbsInspector {
         }
         if (isRunningHeadless()) {
             if (!Utils.registerExternalFunctionsConfig(GlobalState.currentProgram, GlobalState.config)) {
+                Logging.error("Failed to registerExternalFunctionsConfig, existing.");
                 return;
             }
         } else {
@@ -80,8 +84,8 @@ public class NativeSummary extends BinAbsInspector {
 
         // static code coverage
         Logging.info("Calculating static Coverage"); long startTime = System.currentTimeMillis();
-        Coverage.calcStaticCoverage(MyGlobalState.staticCoverage, f, this, new HashSet<>());
-        Logging.info("Calculating static Coverage finished: " +String.valueOf(MyGlobalState.staticCoverage.size()) + " block, " + String.valueOf((System.currentTimeMillis() - startTime)) + "ms." );
+        MyGlobalState.cov.calcStaticCoverage(f, this, new HashSet<>());
+        Logging.info("Calculating static Coverage finished: " + MyGlobalState.cov.getStaticCoverage().size() + " block, " + (System.currentTimeMillis() - startTime) + "ms." );
 
         boolean success;
         try {
@@ -90,19 +94,19 @@ public class NativeSummary extends BinAbsInspector {
             success = false;
         }
 
-        Logging.info("Coverage Result: " + Coverage.getCoverageStatstic(MyGlobalState.staticCoverage, MyGlobalState.coverage));
+        Logging.info("Coverage Result: " + MyGlobalState.cov.getCoverageStatstic());
         Logging.info("Collecting logs...");
         MyGlobalState.onFinishOne();
     }
 
-
     @Override
     public void run() throws Exception {
+        long start = System.currentTimeMillis();
         // parse cmdline once
         if (Config.HeadlessParser.parseConfig(StringUtils.join(getScriptArgs()).strip()).getNoOpt()) {
             println("Warning: disable CalleeSavedReg optimization and local stack value passing optimization is only for experiment, and should not be enabled in most cases.");
         }
-        long start = System.currentTimeMillis();
+        Statistics stat = new Statistics();
         println("Java home: "+System.getProperty("java.home"));
         MyGlobalState.reset(this);
         // setup external blocks
@@ -122,22 +126,38 @@ public class NativeSummary extends BinAbsInspector {
         JsonObject convertedObject = new Gson().fromJson(reader, JsonObject.class);
         // Function, tab separated key in json (String).
         List<Map.Entry<Function, org.example.nativesummary.ir.Function>> funcsToAnalyze = a.run(convertedObject);
+        Set<Function> funcsSet = new HashSet<>(org.example.nativesummary.util.Utils.getListKeySet(funcsToAnalyze));
         // fire runOne on each function
-        for(int i=0;i<funcsToAnalyze.size();i++){
+        for(int i=0;i<funcsToAnalyze.size();i++) {
             Map.Entry<Function, org.example.nativesummary.ir.Function> e = funcsToAnalyze.get(i);
             println("Analyzing "+e.getKey().getName());
             long startOne = System.currentTimeMillis();
             // disable timeout if GUI mode(debug).
             runOne(e.getKey(), e.getValue(), isRunningHeadless());
-            if (i==0 && e.getKey().getName().equals("JNI_OnLoad")) {
-                funcsToAnalyze.addAll(MyGlobalState.se.handleDynamicRegister());
+            if (e.getKey().getName().equals("JNI_OnLoad")) {
+                if (i != 0) {
+                    Logging.error("JNI_OnLoad must be the first function in the list!");
+                    return;
+                }
+                if (MyGlobalState.se.hasDynamicRegister()) {
+                    Logging.info("Dynamic register behaviour in JNI_OnLoad");
+                } else {
+                    Logging.info("No Dynamic register behaviour in JNI_OnLoad");
+                }
+                funcsToAnalyze.addAll(org.example.nativesummary.util.Utils.dedupList(funcsSet, MyGlobalState.se.handleDynamicRegister()));
                 MyGlobalState.onJNIOnLoadFinish();
+            } else if (MyGlobalState.se.hasDynamicRegister()) {
+                Logging.info("Dynamic register behaviour in func: "+e.getKey().getName());
+                funcsToAnalyze.addAll(org.example.nativesummary.util.Utils.dedupList(funcsSet, MyGlobalState.se.handleDynamicRegister()));
             }
             long durationOne = System.currentTimeMillis() - startOne;
             println("Analysis spent "+durationOne+" ms for "+e.getKey().getName());
             if (getMonitor().isCancelled() || Thread.currentThread().isInterrupted()) {
                 Logging.warn("Run Cancelled.");
                 break;
+            } else { // if cancelled, not add current func to statistics
+                // add statistic info.
+                stat.addJNI(e.getKey(), e.getValue(), durationOne, MyGlobalState.cov, MyGlobalState.isTaskTimeout);
             }
         }
         FileOutputStream fw = new FileOutputStream(exe_path + ".summary.java_serialize");
@@ -149,6 +169,11 @@ public class NativeSummary extends BinAbsInspector {
         if (getMonitor().isCancelled()) {
             println("Script execution cancelled by user.");
         }
+        // write statistics.
+        stat.getStatistics(TIMEOUT, duration);
+        FileWriter fw2 = new FileWriter(exe_path + ".perf.json");
+        stat.write(fw2);
+        fw2.close();
         println("NativeSummary script execution time: "+duration + "ms.");
     }
 }
