@@ -771,29 +771,31 @@ public class PcodeVisitor {
                     Context.pushPending(context);
                     Context.pushActive(newContext);
                 }
-            } else { // 这才是那边调用结束回来。
-                // only pass parts of the stack back.
-                for (JImmutableMap.Entry<ALoc, KSet> entry : exit) { // 返回值的更新 尤其是寄存器
-                    RegionBase reg = entry.getKey().getRegion();
-                    Function current = context.getFunction();
-                    if (reg.isLocal()) {
-                        boolean skip = true;
-                        Function func = ((Local)reg).getFunction();
-                        if (func.equals(current)) {
-                            skip = false;
-                        } else {
-                            for (Function f: context.getFuncs()) {
-                                if (current.equals(f)) {
-                                    skip = false; break;
+            } else { // This is where call returns back, after the callee iterates to fixpoint.
+                for (JImmutableMap.Entry<ALoc, KSet> entry : exit) { // update return values (especially registers)
+                    // only pass parts of the stack back.
+                    if (!GlobalState.config.getNoOpt()) {
+                        RegionBase reg = entry.getKey().getRegion();
+                        Function current = context.getFunction();
+                        // for local values, only pass back in context values.
+                        // (for k-callsite-sensitivity, only pass current function's stack + k callers' stack)
+                        if (reg.isLocal()) {
+                            boolean skip = true;
+                            Function func = ((Local)reg).getFunction();
+                            if (func.equals(current)) {
+                                skip = false;
+                            } else {
+                                for (Function f: context.getFuncs()) {
+                                    if (current.equals(f)) {
+                                        skip = false; break;
+                                    }
                                 }
                             }
+                            if (skip) {
+                                continue;
+                            }
                         }
-                        if (skip) {
-                            continue;
-                        }
-                    }
-                    if (!GlobalState.config.getNoCalleeSavedReg()) {
-                        // callee saved register not overwriting
+                        // callee saved register not passing back
                         if (GlobalState.arch.isArm32() && Architechture.isArm32SavedRegister(entry.getKey())) {
                             continue;
                         }
@@ -942,7 +944,7 @@ public class PcodeVisitor {
 
         if (isFinished) {
             for (JImmutableTreeMap.Entry<ALoc, KSet> entry : resEnv.getEnvMap()) {
-                if (GlobalState.config.getNoCalleeSavedReg()) {
+                if (GlobalState.config.getNoOpt()) {
                     // callee saved register not overwriting
                     if (GlobalState.arch.isArm32() && Architechture.isArm32SavedRegister(entry.getKey())) {
                         continue;

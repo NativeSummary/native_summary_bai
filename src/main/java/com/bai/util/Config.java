@@ -56,8 +56,9 @@ public class Config {
             System.out.println("        [-enableZ3]");
             System.out.println("        [-all]");
             System.out.println("        [-debug]");
-            System.out.println("        [-noCalleeSavedReg]");
+            System.out.println("        [-noOpt]");
             System.out.println("        [-check \"<cweNo1>[;<cweNo2>...]\"]");
+            System.out.println("noOpt: disable some optimizations for original BinAbsInspector.");
         }
 
         public static Config parseConfig(String fullArgs) {
@@ -94,8 +95,8 @@ public class Config {
                         CheckerManager.loadAllCheckers(config);
                     } else if (arg.equalsIgnoreCase("-debug")) {
                         config.setDebug(true);
-                    } else if (arg.equalsIgnoreCase("-noCalleeSavedReg")) {
-                        config.setNoCalleeSavedReg(true);
+                    } else if (arg.equalsIgnoreCase("-noOpt")) {
+                        config.setNoOpt(true);
                     } else if (checkArgument("-check", args, argi)) {
                         String[] checkers = getSubArguments(args, argi);
                         Arrays.stream(checkers)
@@ -145,7 +146,7 @@ public class Config {
 
     private boolean isGUI;
 
-    private boolean noCalleeSavedReg;
+    private boolean noOpt;
 
     // for tactic tuning, see:
     // http://www.cs.tau.ac.il/~msagiv/courses/asv/z3py/strategies-examples.htm
@@ -162,7 +163,7 @@ public class Config {
         this.entryAddress = null;
         this.isEnableZ3 = false;
         this.externalMapPath = null;
-        this.noCalleeSavedReg = false;
+        this.noOpt = false;
     }
 
     /**
@@ -356,12 +357,12 @@ public class Config {
         this.isGUI = isGUI;
     }
 
-    public void setNoCalleeSavedReg(boolean noCalleeSavedReg) {
-        this.noCalleeSavedReg = noCalleeSavedReg;
+    public void setNoOpt(boolean noOpt) {
+        this.noOpt = noOpt;
     }
 
-    public boolean getNoCalleeSavedReg() {
-        return noCalleeSavedReg;
+    public boolean getNoOpt() {
+        return noOpt;
     }
 
     @Override
@@ -369,7 +370,7 @@ public class Config {
         return "Config{"
                 + "z3TimeOut=" + z3TimeOut
                 + ", isDebug=" + isDebug
-                + ", noCalleeSavedReg=" + noCalleeSavedReg
+                + ", noCalleeSavedReg=" + noOpt
                 + ", isOutputJson=" + isOutputJson
                 + ", K=" + K
                 + ", callStringK=" + callStringK

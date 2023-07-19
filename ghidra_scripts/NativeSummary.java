@@ -99,8 +99,8 @@ public class NativeSummary extends BinAbsInspector {
     @Override
     public void run() throws Exception {
         // parse cmdline once
-        if (Config.HeadlessParser.parseConfig(StringUtils.join(getScriptArgs()).strip()).getNoCalleeSavedReg()) {
-            println("Warning: noCalleeSavedReg is only for experiment, should not be enabled in most cases.");
+        if (Config.HeadlessParser.parseConfig(StringUtils.join(getScriptArgs()).strip()).getNoOpt()) {
+            println("Warning: disable CalleeSavedReg optimization and local stack value passing optimization is only for experiment, and should not be enabled in most cases.");
         }
         long start = System.currentTimeMillis();
         println("Java home: "+System.getProperty("java.home"));
@@ -136,6 +136,7 @@ public class NativeSummary extends BinAbsInspector {
             long durationOne = System.currentTimeMillis() - startOne;
             println("Analysis spent "+durationOne+" ms for "+e.getKey().getName());
             if (getMonitor().isCancelled() || Thread.currentThread().isInterrupted()) {
+                Logging.warn("Run Cancelled.");
                 break;
             }
         }

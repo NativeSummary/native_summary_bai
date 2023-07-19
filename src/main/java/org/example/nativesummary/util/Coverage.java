@@ -37,6 +37,6 @@ public class Coverage {
         coverage.retainAll(staticCoverage);
         double percentage = ((double) coverage.size()) / staticCoverage.size();
         Set<Address> uncovered = new HashSet<>(staticCoverage); uncovered.removeAll(coverage);
-        return String.format("%d/%d (%f), uncovered addresses: ", coverage.size(), staticCoverage.size(), percentage) + (uncovered.size() > 0 ? uncovered.iterator().next().toString() : "none");
+        return String.format("%d/%d (%f), sample uncovered addresses: ", coverage.size(), staticCoverage.size(), percentage) + (uncovered.size() > 0 ? uncovered.iterator().next().toString() : "none");
     }
 }

@@ -12,6 +12,8 @@ use runner.py to batch process apks. For each case, use intellij IDEA to debug G
 
 ## setup
 
++ clone this repo, and init submodule `git submodule update --init`.
+
 + install ghidra.
 
 + create `gradle.properties` in project root, and set appropriate properties (on Windows, use `/` or `\\` instead of `\`)
@@ -77,7 +79,7 @@ same above, but set cli to `ghidra.GhidraRun`
 
 ## limitations
 
-1. multiple lib with inter dependencies.
+1. multiple lib with inter-dependencies.
 1. cannot load string from function's local variable.
 
 ### FAQ
