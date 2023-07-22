@@ -47,6 +47,8 @@ public enum TypeCategory {
             case "long":
             case "uint":
             case "ulong":
+            case "float":
+            case "double":
                 return NUMBER;
             case "char*":
                 return BUFFER;

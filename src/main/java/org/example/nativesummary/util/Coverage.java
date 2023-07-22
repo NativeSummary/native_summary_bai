@@ -1,5 +1,6 @@
 package org.example.nativesummary.util;
 
+import com.bai.env.funcs.FunctionModelManager;
 import ghidra.program.flatapi.FlatProgramAPI;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.block.BasicBlockModel;
@@ -35,7 +36,11 @@ public class Coverage {
             visited.add(entry);
             entry = entry.getThunkedFunction(true);
         }
-        if (entry.isExternal() || entry.isThunk()) { // do not enter external function
+        // do not enter external function
+        // keep consistent with PcodeVisitor visit_CALL
+        if (entry.isExternal() || entry.isThunk() ||
+                FunctionModelManager.isFunctionAddressMapped(entry.getEntryPoint()) ||
+                FunctionModelManager.isStd(entry)) {
             return;
         }
         BasicBlockModel bbm = new BasicBlockModel(api.getCurrentProgram());

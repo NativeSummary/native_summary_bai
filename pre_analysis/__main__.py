@@ -1,7 +1,7 @@
 
 import json
 import logging
-import sys
+import os
 from collections import OrderedDict
 from typing import Optional
 from zipfile import ZipFile
@@ -16,11 +16,19 @@ logger = logging.getLogger(__name__)
 
 arch_supported = ['arm64-v8a', 'armeabi-v7a', 'armeabi'] # , 'x86_64'?
 arch_supported_prefer_32 = ['armeabi-v7a', 'armeabi', 'arm64-v8a']
-debug_prefer_32 = False
+debug_prefer_32 = os.getenv("NS_PREFER_32", "False").lower() != "false"
 if debug_prefer_32:
+    print("PREFER_32: prefer 32bit arm")
     def_arch_supported = arch_supported_prefer_32
 else:
     def_arch_supported = arch_supported
+
+NS_SELECT_ARCH = os.getenv("NS_SELECT_ARCH", False)
+if NS_SELECT_ARCH:
+    print("Force arch selection to: "+NS_SELECT_ARCH)
+    assert NS_SELECT_ARCH in arch_supported, "NS_SELECT_ARCH env arch selection is not supported!"
+    def_arch_supported = [NS_SELECT_ARCH]
+
 
 def select_abi(apk_zip, prefer_32=None):
     is_flutter = False

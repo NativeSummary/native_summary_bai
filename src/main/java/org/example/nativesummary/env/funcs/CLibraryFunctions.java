@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class CLibarayFunctions extends JNIFunctionBase {
+public class CLibraryFunctions extends JNIFunctionBase {
     // exit memset __aeabi_memcpy
     private static final String[] syms = {"exit", "open", "close", "write", "clock",
             "remove", "usleep", "stat", "access",
@@ -25,13 +25,13 @@ public class CLibarayFunctions extends JNIFunctionBase {
             };
     public static final Set<String> noModelSymbols = new HashSet<>(List.of(symsNoModel));
 
-    public CLibarayFunctions() {
+    public CLibraryFunctions() {
         super(staticSymbols);
     }
 
-    public static CLibarayFunctions instance = new CLibarayFunctions();
+    public static CLibraryFunctions instance = new CLibraryFunctions();
 
-    public static CLibarayFunctions getInstance() {
+    public static CLibraryFunctions getInstance() {
         return instance;
     }
 }

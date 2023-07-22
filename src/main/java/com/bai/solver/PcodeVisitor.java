@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.example.nativesummary.env.funcs.CLibarayFunctions;
+import org.example.nativesummary.env.funcs.CLibraryFunctions;
 import org.example.nativesummary.env.funcs.JNIFunctionBase;
 import org.example.nativesummary.util.Architechture;
 import org.example.nativesummary.util.MyGlobalState;
@@ -443,11 +443,11 @@ public class PcodeVisitor {
             Logging.debug("Invoke external function model: " + funcName);
             externalFunction.invoke(pcode, inOutEnv, tmpEnv, context, callee);
         } else if (!Utils.hasNoSignature(callee)) { // has signature
-            externalFunction = CLibarayFunctions.getInstance();
+            externalFunction = CLibraryFunctions.getInstance();
             Logging.debug("Provide model for external function: " + funcName);
             externalFunction.invoke(pcode, inOutEnv, tmpEnv, context, callee);
         } else {
-            if (!CLibarayFunctions.noModelSymbols.contains(funcName)) {
+            if (!CLibraryFunctions.noModelSymbols.contains(funcName)) {
                 MyGlobalState.warner.warnNoExtModel(funcName);
             }
         }
