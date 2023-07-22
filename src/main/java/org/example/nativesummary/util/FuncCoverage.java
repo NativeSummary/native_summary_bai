@@ -8,20 +8,26 @@ import ghidra.program.model.listing.Function;
 import ghidra.util.exception.CancelledException;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-public class Coverage {
+public class FuncCoverage {
 
     public static long BASEADDR = 0x100000;
 
-    public Set<Address> staticCoverage;
+    public Map<Address, Set<Address>> funcStaticCoverage;
+    public Map<Address, Address> funcMap; // map back from address to func entry address
     public Set<Address> coverage;
     public double percentage;
     Set<Function> staticVisited;
+    Digraph cg;
 
-    public Coverage() {
+
+
+    public FuncCoverage(String soName) {
         this.staticCoverage = new HashSet<>();
         this.coverage = new HashSet<>();
+        cg = new Digraph("CallGraph");
     }
 
     public void calcStaticCoverage(Function entry, FlatProgramAPI api) {

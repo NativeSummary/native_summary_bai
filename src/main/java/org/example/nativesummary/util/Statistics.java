@@ -33,12 +33,12 @@ public class Statistics {
         // Coverage
         JsonArray staticCov = new JsonArray();
         for(Address addr: cov.getStaticCoverage()) {
-            staticCov.add(addr.getOffset());
+            staticCov.add("0x"+Long.toHexString(addr.getOffset()));
         }
         func.add("static_coverage", staticCov);
         JsonArray cov_ = new JsonArray();
         for(Address addr: cov.getCoverage()) {
-            cov_.add(addr.getOffset());
+            cov_.add("0x"+Long.toHexString(addr.getOffset()));
         }
         func.add("coverage", cov_);
 

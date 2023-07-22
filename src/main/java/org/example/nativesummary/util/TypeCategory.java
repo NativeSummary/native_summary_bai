@@ -32,6 +32,9 @@ public enum TypeCategory {
         if (originalDt.getName().equals("undefined")) {
             return UNKNOWN;
         }
+        if (originalDt instanceof Pointer || dt instanceof Pointer) {
+            return BUFFER;
+        }
         Logging.error("[TypeCategory] Unknown return type: " + originalDt.getName());
         return UNKNOWN;
     }

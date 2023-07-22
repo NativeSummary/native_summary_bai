@@ -11,18 +11,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import generic.continues.RethrowContinuesFactory;
 import ghidra.app.cmd.function.ApplyFunctionSignatureCmd;
 import ghidra.app.util.bin.MemoryByteProvider;
-import ghidra.app.util.bin.format.elf.ElfException;
 import ghidra.app.util.bin.format.elf.ElfHeader;
 import ghidra.app.util.bin.format.pe.PortableExecutable;
 import ghidra.app.util.bin.format.pe.OptionalHeader;
 import ghidra.app.util.opinion.ElfLoader;
 import ghidra.app.util.opinion.PeLoader;
 import ghidra.program.model.address.Address;
-import ghidra.program.model.data.FunctionDefinitionDataType;
-import ghidra.program.model.data.IntegerDataType;
-import ghidra.program.model.data.ParameterDefinitionImpl;
-import ghidra.program.model.data.PointerDataType;
+import ghidra.program.model.data.*;
 import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.FunctionSignature;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.pcode.PcodeOp;
 import ghidra.program.model.symbol.LabelHistory;
@@ -389,5 +386,11 @@ public class Utils {
     public static String offset2reg32(int offset) {
         int ind = (offset-0x20)/4;
         return "r"+String.valueOf(ind);
+    }
+
+    // check if function has no signature
+    public static boolean hasNoSignature(Function callee) {
+        FunctionSignature sig = callee.getSignature();
+        return sig.getArguments().length == 0 && Undefined.isUndefined(sig.getReturnType());
     }
 }

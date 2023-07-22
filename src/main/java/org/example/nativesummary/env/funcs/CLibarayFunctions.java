@@ -19,6 +19,7 @@ public class CLibarayFunctions extends JNIFunctionBase {
     private static final Set<String> staticSymbols = new HashSet<>(List.of(syms));
 
     // not print warning when symbols are not modeled
+    // because these functions is not helpful to dataflow analysis, and is too verbose.
     private static final String[] symsNoModel = {"__stack_chk_fail",
             "fseek", "ftell", "lseek", "fseeko", "ftello",
             };
@@ -26,5 +27,11 @@ public class CLibarayFunctions extends JNIFunctionBase {
 
     public CLibarayFunctions() {
         super(staticSymbols);
+    }
+
+    public static CLibarayFunctions instance = new CLibarayFunctions();
+
+    public static CLibarayFunctions getInstance() {
+        return instance;
     }
 }

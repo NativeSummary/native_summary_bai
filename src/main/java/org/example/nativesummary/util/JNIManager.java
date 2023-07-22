@@ -155,7 +155,7 @@ public class JNIManager {
             case NUMBER:
                 newTaint = TaintMap.getTaints(jcs);
                 if (TaintMap.isNewTaint(newTaint)) {
-                    Logging.info("Allocating taint for "+(cur==null?"Param":cur.getName())+" "+ty.toString() + " " + context.toString());
+                    Logging.info("Allocating taint for "+(cur==null?"Param":cur.getName())+" "+ty.toString() + ", ctx: " + context.toString());
                 }
                 return KSet.getTop(newTaint);
             case BUFFER:

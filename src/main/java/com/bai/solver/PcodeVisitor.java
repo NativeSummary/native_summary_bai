@@ -442,6 +442,10 @@ public class PcodeVisitor {
         if (externalFunction != null) {
             Logging.debug("Invoke external function model: " + funcName);
             externalFunction.invoke(pcode, inOutEnv, tmpEnv, context, callee);
+        } else if (!Utils.hasNoSignature(callee)) { // has signature
+            externalFunction = CLibarayFunctions.getInstance();
+            Logging.debug("Provide model for external function: " + funcName);
+            externalFunction.invoke(pcode, inOutEnv, tmpEnv, context, callee);
         } else {
             if (!CLibarayFunctions.noModelSymbols.contains(funcName)) {
                 MyGlobalState.warner.warnNoExtModel(funcName);
@@ -708,6 +712,10 @@ public class PcodeVisitor {
         final Address callSite = Utils.getAddress(pcode);
 //        GlobalState.addOutOfRangeCall(callSite, context.getFunction());
         Function callee = GlobalState.flatAPI.getFunctionAt(targetAddress);
+        if (callee == null) {
+            Logging.error("visit_CALL: Cannot find function at "+targetAddress);
+            return;
+        }
 
         if (callee.isThunk()) {
             callee = callee.getThunkedFunction(true);

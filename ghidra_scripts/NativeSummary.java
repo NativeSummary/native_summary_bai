@@ -84,7 +84,7 @@ public class NativeSummary extends BinAbsInspector {
 
         // static code coverage
         Logging.info("Calculating static Coverage"); long startTime = System.currentTimeMillis();
-        MyGlobalState.cov.calcStaticCoverage(f, this, new HashSet<>());
+        MyGlobalState.cov.calcStaticCoverage(f, this);
         Logging.info("Calculating static Coverage finished: " + MyGlobalState.cov.getStaticCoverage().size() + " block, " + (System.currentTimeMillis() - startTime) + "ms." );
 
         boolean success;
