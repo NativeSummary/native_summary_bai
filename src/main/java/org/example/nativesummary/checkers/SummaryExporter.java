@@ -568,24 +568,6 @@ public class SummaryExporter extends CheckerBase {
         }
     }
 
-    public static String encodeCallsite(long[] cs, long callsite) {
-        StringBuilder b = new StringBuilder();
-        for(long c: cs) {
-            b.append("0x").append(Long.toHexString(c));
-            b.append('\t');
-        }
-        b.append(Long.toHexString(callsite));
-        return b.toString();
-    }
-
-    public static String encodeProperty(JNIValue v, Function f) {
-        return encodeCallsite(v.callstring, v.callsite) + "\t" + v.apiName;
-    }
-
-    public static String encodeRetVal() {
-        return "RETURN_VALUE";
-    }
-
     @Override
     public boolean check() {
         // TODO handle tail jump.
@@ -595,7 +577,7 @@ public class SummaryExporter extends CheckerBase {
             long callsite = v.callsite;
             Function f = GlobalState.flatAPI.getFunctionContaining(GlobalState.flatAPI.toAddr(callsite));
             // todo handle non-external model
-            Function jniapi = Utils.getExternalFunc(v.apiName);
+            Function jniapi = v.getFunc();
             if (jniapi == null) {
                 Logging.error("Cannot find called external function for 0x"+Long.toHexString(callsite));
                 continue;
@@ -606,8 +588,6 @@ public class SummaryExporter extends CheckerBase {
                 continue;
             }
             // decode params
-            assert jniapi != null;
-//                encodeProperty(v, f)
             Call c = JV2Call(v);
             jvMap.put(v, c);
             current.addAll(decodeParams(f, c, jniapi, absEnv));
@@ -643,7 +623,7 @@ public class SummaryExporter extends CheckerBase {
         } else {
             v = new Call();
             v.callsite = jv.callsite;
-            v.target = jv.apiName;
+            v.target = Utils.getIrFullName(jv.getFunc());
             v.callstring = jv.callstring;
         }
         if (v.comments == null) {

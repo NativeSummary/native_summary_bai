@@ -33,7 +33,7 @@ public class JNIFunctionBase extends ExternalFunctionBase {
 
     // record this call for summary ir
     public static JNIValue recordCall(Context context, Function callFunc) {
-        JNIValue jcs = new JNIValue(context, callFunc.getName(), currentCallSite.getOffset());
+        JNIValue jcs = new JNIValue(context, callFunc, currentCallSite.getOffset());
         // 先注册，待之后回来解析参数
         MyGlobalState.jnim.registerCall(jcs, context);
         return jcs;
@@ -46,7 +46,7 @@ public class JNIFunctionBase extends ExternalFunctionBase {
     }
 
     @Override
-    public void invoke(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv, Context context, Function callFunc) {
+    public void invoke(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv, Context context, /*NotNull*/ Function callFunc) {
         // check GetEnv GetJavaVM
         int index = -1;
         String funcname = callFunc.getName();

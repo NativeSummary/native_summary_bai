@@ -114,6 +114,17 @@ public class Utils {
         return "(undefined)";
     }
 
+    public static String getIrFullName(Function func) {
+        String full = func.getName(true);
+        if (full != null) {
+            if (full.startsWith("<EXTERNAL>::")) {
+                return full.substring("<EXTERNAL>::".length());
+            }
+            return full;
+        }
+        return "(undefined)";
+    }
+
     public static String describeAddr(long addr) {
         if (addr == 0) {
             return "[0]";

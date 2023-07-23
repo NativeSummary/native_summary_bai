@@ -436,7 +436,7 @@ public class PcodeVisitor {
     }
 
 
-    private Status invokeExternal(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv, Function callee) {
+    private Status invokeExternal(PcodeOp pcode, AbsEnv inOutEnv, AbsEnv tmpEnv, /*NotNull*/ Function callee) {
         String funcName = callee.getName();
         ExternalFunctionBase externalFunction = FunctionModelManager.getExternalFunction(funcName);
         if (externalFunction != null) {
