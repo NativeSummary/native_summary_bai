@@ -20,7 +20,7 @@ else:
 
 if GHIDRA_NS_ARGS is not None:
     cmd += " "
-    cmd += GHIDRA_NS_ARGS
+    cmd += f'"{GHIDRA_NS_ARGS}"'
 
 def analyze_one(p, proj_path):
     os.makedirs(proj_path, exist_ok=True)

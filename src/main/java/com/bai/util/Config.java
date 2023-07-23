@@ -57,8 +57,10 @@ public class Config {
             System.out.println("        [-all]");
             System.out.println("        [-debug]");
             System.out.println("        [-noOpt]");
+            System.out.println("        [-noModel]");
             System.out.println("        [-check \"<cweNo1>[;<cweNo2>...]\"]");
             System.out.println("noOpt: disable some optimizations for original BinAbsInspector.");
+            System.out.println("noModel: disable external model for all non-import function.");
         }
 
         public static Config parseConfig(String fullArgs) {
@@ -97,6 +99,8 @@ public class Config {
                         config.setDebug(true);
                     } else if (arg.equalsIgnoreCase("-noOpt")) {
                         config.setNoOpt(true);
+                    } else if (arg.equalsIgnoreCase("-noModel")) {
+                        config.setNoModel(true);
                     } else if (checkArgument("-check", args, argi)) {
                         String[] checkers = getSubArguments(args, argi);
                         Arrays.stream(checkers)
@@ -146,7 +150,10 @@ public class Config {
 
     private boolean isGUI;
 
+    // disable stack passing optimization.
     private boolean noOpt;
+    // disable model for non-import function.
+    private boolean noModel;
 
     // for tactic tuning, see:
     // http://www.cs.tau.ac.il/~msagiv/courses/asv/z3py/strategies-examples.htm
@@ -164,6 +171,7 @@ public class Config {
         this.isEnableZ3 = false;
         this.externalMapPath = null;
         this.noOpt = false;
+        this.noModel = false;
     }
 
     /**
@@ -365,12 +373,21 @@ public class Config {
         return noOpt;
     }
 
+    public void setNoModel(boolean noModel) {
+        this.noModel = noModel;
+    }
+
+    public boolean getNoModel() {
+        return noModel;
+    }
+
     @Override
     public String toString() {
         return "Config{"
                 + "z3TimeOut=" + z3TimeOut
                 + ", isDebug=" + isDebug
                 + ", noOpt=" + noOpt
+                + ", noModel=" + noModel
                 + ", isOutputJson=" + isOutputJson
                 + ", K=" + K
                 + ", callStringK=" + callStringK

@@ -5,7 +5,7 @@ import com.bai.env.AbsEnv;
 import com.bai.env.Context;
 import com.bai.env.KSet;
 import ghidra.app.script.GhidraScript;
-import ghidra.program.model.address.Address;
+import ghidra.program.flatapi.FlatProgramAPI;
 import ghidra.program.model.listing.Function;
 import ghidra.util.task.TaskMonitor;
 import org.example.nativesummary.checkers.SummaryExporter;
@@ -13,9 +13,6 @@ import org.example.nativesummary.env.TaintMap;
 import org.example.nativesummary.mapping.JSONAnalyzer;
 import org.javimmutable.collections.JImmutableMap;
 import org.javimmutable.collections.tree.JImmutableTreeMap;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * 由于一次分析需要运行多次BinAbsInspector，因此它的GlobalState也不再Global。
@@ -25,7 +22,7 @@ import java.util.Set;
  * - 分析其他的时候
  */
 public class MyGlobalState {
-
+    public static FlatProgramAPI flatapi;
     public static JNIManager onloadJNIm;
     public static JNIManager jnim;
     public static SummaryExporter se;
@@ -49,10 +46,11 @@ public class MyGlobalState {
     public static AbsEnv onLoadEnv;
 
     public static WarningDeduplicator warner;
-    public static Coverage cov;
+    public static FuncCoverage funcCov;
 
 
     public static void reset(GhidraScript main) {
+        flatapi = main;
         defaultPointerSize = main.getCurrentProgram().getDefaultPointerSize();
         onloadJNIm = null;
         jnim = new JNIManager();
@@ -71,7 +69,7 @@ public class MyGlobalState {
         warner = new WarningDeduplicator();
         monitor = main.getMonitor();
         isTaskTimeout = false;
-        cov = null;
+        funcCov = null;
     }
 
     public static void onStartOne(Function f, org.example.nativesummary.ir.Function irFunc) {
@@ -81,7 +79,7 @@ public class MyGlobalState {
         se.onStartFunc(irFunc);
         warner.onStartOne();
         isTaskTimeout = false;
-        cov = new Coverage();
+        funcCov = new FuncCoverage(flatapi.getCurrentProgram().getFunctionManager());
     }
 
     public static void onFinishOne() {

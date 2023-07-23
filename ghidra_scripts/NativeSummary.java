@@ -14,8 +14,8 @@ import ghidra.program.model.listing.ContextChangeException;
 import ghidra.program.model.listing.Function;
 import ghidra.util.exception.CancelledException;
 import org.example.nativesummary.mapping.JSONAnalyzer;
-import org.example.nativesummary.util.Coverage;
 import org.example.nativesummary.util.EnvSetup;
+import org.example.nativesummary.util.FuncCoverage;
 import org.example.nativesummary.util.MyGlobalState;
 import org.apache.commons.lang3.StringUtils;
 import org.example.nativesummary.util.Statistics;
@@ -25,7 +25,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.nio.file.Paths;
-import java.sql.Time;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -82,10 +81,11 @@ public class NativeSummary extends BinAbsInspector {
         // !!ForDebug
         // GlobalState.config.setTimeout(5);
 
+
         // static code coverage
-        Logging.info("Calculating static Coverage"); long startTime = System.currentTimeMillis();
-        MyGlobalState.cov.calcStaticCoverage(f, this);
-        Logging.info("Calculating static Coverage finished: " + MyGlobalState.cov.getStaticCoverage().size() + " block, " + (System.currentTimeMillis() - startTime) + "ms." );
+        Logging.info("Calculating static coverage"); long startTime = System.currentTimeMillis();
+        MyGlobalState.funcCov.calcStaticCoverage(f, this);
+        Logging.info("Calculating static coverage finished: " + MyGlobalState.funcCov.getStaticCoverage().size() + " block, " + (System.currentTimeMillis() - startTime) + "ms." );
 
         boolean success;
         try {
@@ -94,7 +94,10 @@ public class NativeSummary extends BinAbsInspector {
             success = false;
         }
 
-        Logging.info("Coverage Result: " + MyGlobalState.cov.getCoverageStatstic());
+        Logging.info("Calculating coverage"); startTime = System.currentTimeMillis();
+        MyGlobalState.funcCov.calcCoverageStatstic();
+        Logging.info("Calculating coverage finished: " + (System.currentTimeMillis() - startTime) + "ms.");
+        Logging.info("Coverage Result: " + MyGlobalState.funcCov.getCoverageStatsticString());
         Logging.info("Collecting logs...");
         MyGlobalState.onFinishOne();
     }
@@ -103,10 +106,16 @@ public class NativeSummary extends BinAbsInspector {
     public void run() throws Exception {
         long start = System.currentTimeMillis();
         // parse cmdline once
-        if (Config.HeadlessParser.parseConfig(StringUtils.join(getScriptArgs()).strip()).getNoOpt()) {
-            println("Warning: disable CalleeSavedReg optimization and local stack value passing optimization is only for experiment, and should not be enabled in most cases.");
+        Config conf = Config.HeadlessParser.parseConfig(StringUtils.join(getScriptArgs()).strip());
+        if (conf.getNoOpt()) {
+            println("Warning: disabling CalleeSavedReg optimization and local stack value passing optimization is only for experiment, and should not be enabled in most cases.");
         }
-        Statistics stat = new Statistics();
+        if (conf.getNoModel()) {
+            println("Warning: disabling function models is only for experiment, and should not be enabled in most cases.");
+            FuncCoverage.isNoModel = true;
+        }
+        // only enable detailed info in noModel mode. (for experiment)
+        Statistics stat = new Statistics(conf.getNoModel());
         println("Java home: "+System.getProperty("java.home"));
         MyGlobalState.reset(this);
         // setup external blocks
@@ -157,7 +166,7 @@ public class NativeSummary extends BinAbsInspector {
                 break;
             } else { // if cancelled, not add current func to statistics
                 // add statistic info.
-                stat.addJNI(e.getKey(), e.getValue(), durationOne, MyGlobalState.cov, MyGlobalState.isTaskTimeout);
+                stat.addJNI(e.getKey(), e.getValue(), durationOne, MyGlobalState.funcCov, MyGlobalState.isTaskTimeout);
             }
         }
         FileOutputStream fw = new FileOutputStream(exe_path + ".summary.java_serialize");
@@ -170,7 +179,7 @@ public class NativeSummary extends BinAbsInspector {
             println("Script execution cancelled by user.");
         }
         // write statistics.
-        stat.getStatistics(TIMEOUT, duration);
+        stat.getStatistics(TIMEOUT, duration, getCurrentProgram().getFunctionManager());
         FileWriter fw2 = new FileWriter(exe_path + ".perf.json");
         stat.write(fw2);
         fw2.close();

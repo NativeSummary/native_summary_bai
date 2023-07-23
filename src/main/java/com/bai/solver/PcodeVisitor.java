@@ -732,7 +732,8 @@ public class PcodeVisitor {
             return;
         }
 
-        if (FunctionModelManager.isStd(callee)) { // TODO: support mapping address to std model
+        // noModel = true -> skip branch
+        if ((!GlobalState.config.getNoModel()) && FunctionModelManager.isStd(callee)) { // TODO: support mapping address to std model
             Logging.debug("Calling C++ STL: " + callee.getName(true));
             defineStdFunctionSignature(pcode, inOutEnv, tmpEnv, callee);
 //            MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
@@ -882,7 +883,7 @@ public class PcodeVisitor {
                 noReturn &= status.noReturn;
                 isExitEmpty |= status.isExitEmpty;
                 isFinished = isFinished & status.isFinished;
-            } else if (FunctionModelManager.isStd(callee)) { // TODO: support mapping address to std model
+            } else if ((!GlobalState.config.getNoModel()) && FunctionModelManager.isStd(callee)) { // TODO: support mapping address to std model
                 defineStdFunctionSignature(pcode, inOutEnv, tmpEnv, callee);
                 // CWE119, CWE416, CWE416, CWE476
 //                MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
@@ -1539,7 +1540,7 @@ public class PcodeVisitor {
         Instruction instruction = null;
         if (address != null) {
             // static code coverage.
-            MyGlobalState.cov.visit(address);
+            MyGlobalState.funcCov.visit(address);
             func = GlobalState.flatAPI.getFunctionContaining(address);
             instruction = GlobalState.flatAPI.getInstructionAt(address);
         }

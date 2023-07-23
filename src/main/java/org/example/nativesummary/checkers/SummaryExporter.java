@@ -594,7 +594,12 @@ public class SummaryExporter extends CheckerBase {
             Context context = ent.getValue();
             long callsite = v.callsite;
             Function f = GlobalState.flatAPI.getFunctionContaining(GlobalState.flatAPI.toAddr(callsite));
+            // todo handle non-external model
             Function jniapi = Utils.getExternalFunc(v.apiName);
+            if (jniapi == null) {
+                Logging.error("Cannot find called external function for 0x"+Long.toHexString(callsite));
+                continue;
+            }
             AbsEnv absEnv = context.getAbsEnvIn().get(GlobalState.flatAPI.toAddr(callsite));
             if (absEnv == null) {
                 Logging.error("Cannot find absEnv for 0x"+Long.toHexString(callsite));
