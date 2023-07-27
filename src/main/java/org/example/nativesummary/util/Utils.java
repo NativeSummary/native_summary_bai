@@ -26,6 +26,8 @@ import ghidra.util.task.TaskMonitor;
 import org.example.nativesummary.ir.Instruction;
 
 import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 
 public class Utils {
@@ -166,7 +168,7 @@ public class Utils {
 
     public static AbsVal getExactSpVal(AbsEnv env) {
         KSet sp = env.get(ALoc.getSPALoc());
-        if (sp.isTop() || sp.getInnerSet().size() > 1) {
+        if (sp.isTop() || sp.getInnerSet().size() > 1 || sp.getInnerSet().size() == 0) {
             return null;
         }
         AbsVal val = sp.iterator().next();
@@ -233,5 +235,12 @@ public class Utils {
             }
         }
         return ret;
+    }
+
+    public static String getExceptionStackTrace(Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        return sw.toString();
     }
 }

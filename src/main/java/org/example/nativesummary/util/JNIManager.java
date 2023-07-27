@@ -124,7 +124,7 @@ public class JNIManager {
             }
             for (ALoc al_: al) {
                 JNIValue jniVal = new JNIValue(i);
-                KSet val =  getRetFromType(p.getDataType(), null, jniVal, al_.getLen()*8, null, mainContext, e);
+                KSet val =  getRetFromType(p.getDataType(), cur.getEntryPoint(), jniVal, al_.getLen()*8, null, mainContext, e);
                 if (val != null) {
                     e.set(al_, val, false);
                 }

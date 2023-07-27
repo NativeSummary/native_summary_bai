@@ -69,6 +69,9 @@ public class SummaryExporter extends CheckerBase {
 
     // TODO APK name
     public void export(OutputStream w, FileWriter irFw, String apkname) {
+        if (mod.funcs.size() == 0) {
+            return;
+        }
         mod.apk_name = apkname;
         try {
             ObjectOutputStream out = new ObjectOutputStream(w);

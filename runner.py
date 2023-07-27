@@ -15,8 +15,8 @@ if sys.platform == 'win32':
     tee_template = 'powershell "{} | tee {}"'
     cmd = GHIDRA_DIR + '/support/analyzeHeadless.bat {} native_summary -import {} -postScript NativeSummary'
 else:
-    tee_template = 'bash -c "{} | tee {}"'
-    cmd = GHIDRA_DIR + '/support/analyzeHeadless {} native_summary -import {} -postScript NativeSummary'
+    tee_template = '{} | tee {}'
+    cmd = GHIDRA_DIR + '/support/analyzeHeadless {} native_summary -import "{}" -postScript NativeSummary'
 
 if GHIDRA_NS_ARGS is not None:
     cmd += " "
@@ -175,4 +175,3 @@ if __name__ == '__main__':
     # remve_all_project_folder(r'F:\native_summary\malradar-preana')
     # analyze_apks(r'F:\native_summary\malradar-preana', 5, 'skip')
     main()
-

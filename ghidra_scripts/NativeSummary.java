@@ -141,8 +141,15 @@ public class NativeSummary extends BinAbsInspector {
             Map.Entry<Function, org.example.nativesummary.ir.Function> e = funcsToAnalyze.get(i);
             println("Analyzing "+e.getKey().getName());
             long startOne = System.currentTimeMillis();
-            // disable timeout if GUI mode(debug).
-            runOne(e.getKey(), e.getValue(), isRunningHeadless());
+            try {
+                // disable timeout if GUI mode(debug).
+                runOne(e.getKey(), e.getValue(), isRunningHeadless());
+            } catch (Exception exc) {
+                Logging.error("Failed to analyze: "+e.getKey().getName()+", ("+e.getKey().getEntryPoint()+")");
+                Logging.error(exc.getMessage());
+                Logging.error(org.example.nativesummary.util.Utils.getExceptionStackTrace(exc));
+                continue;
+            }
             if (e.getKey().getName().equals("JNI_OnLoad")) {
                 if (i != 0) {
                     Logging.error("JNI_OnLoad must be the first function in the list!");
@@ -171,7 +178,7 @@ public class NativeSummary extends BinAbsInspector {
         }
         FileOutputStream fw = new FileOutputStream(exe_path + ".summary.java_serialize");
         FileWriter irFw = new FileWriter(exe_path + ".summary.ir.ll");
-        MyGlobalState.se.export(fw, irFw, null); // TODO apk name ??
+        MyGlobalState.se.export(fw, irFw, null);
         fw.close();
         irFw.close();
         long duration = System.currentTimeMillis() - start;
