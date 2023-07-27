@@ -116,6 +116,7 @@ public class NativeSummary extends BinAbsInspector {
         }
         // only enable detailed info in noModel mode. (for experiment)
         Statistics stat = new Statistics(conf.getNoModel());
+        stat.addStatistics(TIMEOUT, getCurrentProgram().getFunctionManager());
         println("Java home: "+System.getProperty("java.home"));
         MyGlobalState.reset(this);
         // setup external blocks
@@ -171,10 +172,11 @@ public class NativeSummary extends BinAbsInspector {
             if (getMonitor().isCancelled() || Thread.currentThread().isInterrupted()) {
                 Logging.warn("Run Cancelled.");
                 break;
-            } else { // if cancelled, not add current func to statistics
-                // add statistic info.
-                stat.addJNI(e.getKey(), e.getValue(), durationOne, MyGlobalState.funcCov, MyGlobalState.isTaskTimeout);
+                // if cancelled, not add current func to statistics
             }
+            // add statistic info.
+            stat.addJNI(e.getKey(), e.getValue(), durationOne, MyGlobalState.funcCov, MyGlobalState.isTaskTimeout);
+            stat.write(exe_path + ".perf.json");
         }
         FileOutputStream fw = new FileOutputStream(exe_path + ".summary.java_serialize");
         FileWriter irFw = new FileWriter(exe_path + ".summary.ir.ll");
@@ -186,10 +188,8 @@ public class NativeSummary extends BinAbsInspector {
             println("Script execution cancelled by user.");
         }
         // write statistics.
-        stat.getStatistics(TIMEOUT, duration, getCurrentProgram().getFunctionManager());
-        FileWriter fw2 = new FileWriter(exe_path + ".perf.json");
-        stat.write(fw2);
-        fw2.close();
+        stat.addTotalScriptTime(duration);
+        stat.write(exe_path + ".perf.json");
         println("NativeSummary script execution time: "+duration + "ms.");
     }
 }

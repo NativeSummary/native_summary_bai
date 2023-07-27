@@ -7,6 +7,7 @@ import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.FunctionManager;
 
 import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Map;
 
@@ -61,14 +62,16 @@ public class Statistics {
     }
 
     // if mgr == null, not generate addrMap
-    public JsonObject getStatistics(long timeout, long total_script_time, FunctionManager mgr) {
+    public void addStatistics(long timeout, FunctionManager mgr) {
         if (detailed) {
             JsonObject addrMap = buildAddrMap(mgr);
             stat.add("function_address_ranges", addrMap);
         }
         stat.addProperty("time_out_s", timeout);
+    }
+
+    public void addTotalScriptTime(long total_script_time) {
         stat.addProperty("total_script_time", total_script_time);
-        return stat;
     }
 
     private JsonObject buildAddrMap(FunctionManager mgr) {
@@ -89,6 +92,12 @@ public class Statistics {
             }
         }
         return ret;
+    }
+
+    public void write(String path) throws IOException {
+        FileWriter fw2 = new FileWriter(path);
+        write(fw2);
+        fw2.close();
     }
 
     public void write(FileWriter fileWriter) {
