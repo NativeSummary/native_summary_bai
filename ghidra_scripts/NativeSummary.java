@@ -31,9 +31,9 @@ import java.util.Map;
 import java.util.Set;
 
 public class NativeSummary extends BinAbsInspector {
-    public static final int TIMEOUT = 300;
+    public static int TIMEOUT = 300;
 
-    public void runOne(Function f, org.example.nativesummary.ir.Function irFunc, boolean fastMode) throws ContextChangeException {
+    public void runOne(Function f, org.example.nativesummary.ir.Function irFunc, boolean disableTimeot) throws ContextChangeException {
         // TODO move reset after finished (currently for debug purpose)
         MyGlobalState.onStartOne(f, irFunc);
         GlobalState.reset();
@@ -51,9 +51,8 @@ public class NativeSummary extends BinAbsInspector {
         GlobalState.config.clearCheckers();
         GlobalState.config.setEntryAddress("0x"+Long.toHexString(f.getEntryPoint().getOffset()));
         GlobalState.config.setCallStringK(1);
-        if (fastMode) {
-            GlobalState.config.setK(15);
-            GlobalState.config.setTimeout(TIMEOUT);
+        if (disableTimeot) {
+            GlobalState.config.setTimeout(-1);
         }
 
         if (!Logging.init()) {
@@ -116,7 +115,7 @@ public class NativeSummary extends BinAbsInspector {
         }
         // only enable detailed info in noModel mode. (for experiment)
         Statistics stat = new Statistics(conf.getNoModel());
-        stat.addStatistics(TIMEOUT, getCurrentProgram().getFunctionManager());
+        stat.addStatistics(conf.getTimeout(), getCurrentProgram().getFunctionManager());
         println("Java home: "+System.getProperty("java.home"));
         MyGlobalState.reset(this);
         // setup external blocks
@@ -143,8 +142,8 @@ public class NativeSummary extends BinAbsInspector {
             println("Analyzing "+e.getKey().getName());
             long startOne = System.currentTimeMillis();
             try {
-                // disable timeout if GUI mode(debug).
-                runOne(e.getKey(), e.getValue(), isRunningHeadless());
+                // disable timeout if GUI mode.
+                runOne(e.getKey(), e.getValue(), !isRunningHeadless());
             } catch (Exception exc) {
                 Logging.error("Failed to analyze: "+e.getKey().getName()+", ("+e.getKey().getEntryPoint()+")");
                 Logging.error(exc.getMessage());
