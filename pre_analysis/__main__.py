@@ -96,7 +96,7 @@ def apk_pre_analysis(apk_path, analyse_dex=True, prefer_32=None):
             so_stat[filename] = (checksum, java_syms, imp, exp)
             if (java_syms != None and len(java_syms) > 0) or (jni_syms != None and len(jni_syms) > 0):
                 has_javasym = True
-            # TODO JNI related symbols in import
+
 
     if analyse_dex:
         # time consumeing!!!

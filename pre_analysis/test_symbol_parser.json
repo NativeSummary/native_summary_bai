@@ -1,0 +1,106 @@
+{
+  "org.pixeldroid.app_10.apk libNativeImageProcessor.so": [
+    [
+      "Java_com_zomato_photofilters_imageprocessors_NativeImageProcessor_doColorOverlay",
+      "com.zomato.photofilters.imageprocessors.NativeImageProcessor doColorOverlay"
+    ],
+    [
+      "Java_com_zomato_photofilters_imageprocessors_NativeImageProcessor_doContrast",
+      "com.zomato.photofilters.imageprocessors.NativeImageProcessor doContrast"
+    ],
+    [
+      "Java_com_zomato_photofilters_imageprocessors_NativeImageProcessor_doSaturation",
+      "com.zomato.photofilters.imageprocessors.NativeImageProcessor doSaturation"
+    ],
+    [
+      "Java_com_zomato_photofilters_imageprocessors_NativeImageProcessor_applyChannelCurves",
+      "com.zomato.photofilters.imageprocessors.NativeImageProcessor applyChannelCurves"
+    ],
+    [
+      "Java_com_zomato_photofilters_imageprocessors_NativeImageProcessor_doBrightness",
+      "com.zomato.photofilters.imageprocessors.NativeImageProcessor doBrightness"
+    ],
+    [
+      "Java_com_zomato_photofilters_imageprocessors_NativeImageProcessor_applyRGBCurve",
+      "com.zomato.photofilters.imageprocessors.NativeImageProcessor applyRGBCurve"
+    ]
+  ],
+  "com.zoffcc.applications.trifa_10153.apk libjni-c-toxcore.so": [
+    [
+      "Java_com_zoffcc_applications_trifa_MainActivity_tox_1conference_1peer_1get_1name_1size",
+      "com.zoffcc.applications.trifa.MainActivity tox_conference_peer_get_name_size"
+    ],
+    [
+      "Java_com_zoffcc_applications_trifa_MainActivity_tox_1conference_1get_1title_1size",
+      "com.zoffcc.applications.trifa.MainActivity tox_conference_get_title_size"
+    ],
+    [
+      "Java_com_zoffcc_applications_trifa_MainActivity_export_1savedata_1file_1unsecure",
+      "com.zoffcc.applications.trifa.MainActivity export_savedata_file_unsecure"
+    ],
+    [
+      "Java_com_zoffcc_applications_trifa_MainActivity_tox_1self_1get_1status_1message_1size",
+      "com.zoffcc.applications.trifa.MainActivity tox_self_get_status_message_size"
+    ]
+  ],
+  "com.log28_10.apk librealm-jni.so": [
+    [
+      "Java_io_realm_internal_TableQuery_nativeNotEqual__J_3J_3JLjava_lang_String_2Z",
+      "io.realm.internal.TableQuery nativeNotEqual J[J[JLjava/lang/String;Z"
+    ],
+    [
+      "Java_io_realm_internal_TableQuery_nativeGreater__J_3J_3JF",
+      "io.realm.internal.TableQuery nativeGreater J[J[JF"
+    ],
+    [
+      "Java_io_realm_internal_TableQuery_nativeNotEqual__J_3J_3J_3B",
+      "io.realm.internal.TableQuery nativeNotEqual J[J[J[B"
+    ]
+  ],
+  "other": [
+    [
+      "Java_com_thundersoft_hz_selfportrait_detect_FaceDetect_native_1detect__ILandroid_graphics_Bitmap_2",
+      "com.thundersoft.hz.selfportrait.detect.FaceDetect native_detect ILandroid/graphics/Bitmap;"
+    ],
+    [
+      "Java_com_thundersoft_hz_selfportrait_detect_FaceDetect_native_1detect__I_3BII",
+      "com.thundersoft.hz.selfportrait.detect.FaceDetect native_detect I[BII"
+    ],
+    [
+      "Java_com_intsig_pdfengine_PDF_1Engine_newPage__FF",
+      "com.intsig.pdfengine.PDF_Engine newPage FF"
+    ],
+    [
+      "Java_com_badlogic_gdx_utils_BufferUtils_find__Ljava_nio_Buffer_2IILjava_nio_Buffer_2II",
+      "com.badlogic.gdx.utils.BufferUtils find Ljava/nio/Buffer;IILjava/nio/Buffer;II"
+    ],
+    [
+      "Java_com_badlogic_gdx_utils_BufferUtils_find___3FIILjava_nio_Buffer_2II",
+      "com.badlogic.gdx.utils.BufferUtils find [FIILjava/nio/Buffer;II"
+    ],
+    [
+      "Java_com_badlogic_gdx_utils_BufferUtils_find__Ljava_nio_Buffer_2II_3FII",
+      "com.badlogic.gdx.utils.BufferUtils find Ljava/nio/Buffer;II[FII"
+    ],
+    [
+      "Java_com_badlogic_gdx_utils_BufferUtils_find___3FII_3FII",
+      "com.badlogic.gdx.utils.BufferUtils find [FII[FII"
+    ],
+    [
+      "Java_com_badlogic_gdx_utils_BufferUtils_find__Ljava_nio_Buffer_2IILjava_nio_Buffer_2IIF",
+      "com.badlogic.gdx.utils.BufferUtils find Ljava/nio/Buffer;IILjava/nio/Buffer;IIF"
+    ],
+    [
+      "Java_com_badlogic_gdx_utils_BufferUtils_find___3FIILjava_nio_Buffer_2IIF",
+      "com.badlogic.gdx.utils.BufferUtils find [FIILjava/nio/Buffer;IIF"
+    ],
+    [
+      "Java_com_badlogic_gdx_utils_BufferUtils_find__Ljava_nio_Buffer_2II_3FIIF",
+      "com.badlogic.gdx.utils.BufferUtils find Ljava/nio/Buffer;II[FIIF"
+    ],
+    [
+      "Java_com_badlogic_gdx_utils_BufferUtils_find___3FII_3FIIF",
+      "com.badlogic.gdx.utils.BufferUtils find [FII[FIIF"
+    ]
+  ]
+}

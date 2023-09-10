@@ -105,7 +105,7 @@ def pre_analysis(apk_path, out_path):
         target = open(os.path.join(out_path, so_name), "wb")
         with source, target:
             shutil.copyfileobj(source, target)
-        
+
         # generate json object
         out_json = dict()
         for symbol, jmethod in symb_map_list:
@@ -150,13 +150,15 @@ def pre_analysis(apk_path, out_path):
     
     # tags = {'is_flutter': is_flutter, 'has_so':has_so, 'has_javasym':has_javasym}
     has_native = len(dex.native_methods) > 0
-    type_index = tag2index(has_so=tags['has_so'], has_javasym=tags['has_javasym'], has_native=has_native)
-    if tags['is_flutter']:
-        print(f'flutter is of type: {type_index}') # TODO debug
+    # type_index = tag2index(has_so=tags['has_so'], has_javasym=tags['has_javasym'], has_native=has_native)
+    # if tags['is_flutter']:
+    #     print(f'flutter is of type: {type_index}') # TODO debug
 
     # statistics
     stat = {}
-    stat['6type_ind'] = type_index
+    stat['has_so'] = tags['has_so']
+    stat['has_javasym'] = tags['has_javasym']
+    stat['has_native'] = has_native
     stat['is_flutter'] = tags['is_flutter']
     stat['selected_arch'] = arch_selected
     if True: # analyze_dex
@@ -165,11 +167,22 @@ def pre_analysis(apk_path, out_path):
         stat['failed_java_mth'] = list(map(format_method, dex.unresolved_java()))
         stat['success_java_mth'] = list(map(format_method, dex.resolved_java()))
         stat['multimapping_java_mth'] = get_multi_mapping(dex)
-    stat['so_stat'] = so_stat
+    stat['so_stat'] = clean_so_stat(so_stat)
     stat['analysis_time'] = time.time() - t
     GLOBAL_STATE['apk_stat'][apk_name] = stat
     # only change progress after everything
     GLOBAL_STATE['progress'].add(apk_name)
+
+def clean_so_stat(so_stat):
+    '''
+    clean up verbose part of so_stat
+    so_stat[filename] = (checksum, java_syms, imp, exp)
+    keep only java_syms part
+    '''
+    ret = {}
+    for filename in so_stat:
+        ret[filename] = so_stat[filename][1]
+    return ret
 
 def analyze_one(apk_path, out_path=None, redo=False):
     print(f"Processing {apk_path}")
@@ -180,6 +193,10 @@ def analyze_one(apk_path, out_path=None, redo=False):
         print(f'deleting {out_path}')
         rmtree(out_path)
     pre_analysis(apk_path, out_path)
+    stat = GLOBAL_STATE['apk_stat'][os.path.basename(apk_path)]
+    apk_result = os.path.join(out_path, "apk_pre_analysis.json")
+    with open(apk_result, 'w') as f:
+        json.dump(stat, f, indent=2)
     if len(os.listdir(out_path)) == 0:
         print("empty folder. removing...")
         os.rmdir(out_path)

@@ -18,7 +18,6 @@ def extract_names(symbol):
     https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/design.html
     provides the naming convention.
     sig returned only contains arg. for example, only "J[J[JZ" in "(J [J [J Z)V"
-    TODO: this analysis do not support Unicode characters in the name.
     """
     # special case 'Java_com_snappydb_internal_DBImpl__1_1put__Ljava_lang_String_2Ljava_lang_String_2'
     # 'com.googlecode.javacpp.Pointer_00024NativeDeallocator'
