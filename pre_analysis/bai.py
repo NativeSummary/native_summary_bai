@@ -1,7 +1,7 @@
 # pre-analysis for Ghidra + BinAbsInspector + NativeSummay module
 # extract shared objects in apk and generate `<soname>.funcs.json` file specifying jni methods to analysis.
 
-import os,shutil,json,zipfile,sys,time
+import os,shutil,json,zipfile,sys,time,logging
 from zipfile import ZipFile
 
 from .__main__ import apk_pre_analysis
@@ -22,7 +22,17 @@ def get_type(atype):
     """
     Retrieve the java type of a descriptor (e.g : I -> jint)
     """
-    from androguard.decompiler.dad.util import TYPE_DESCRIPTOR
+    TYPE_DESCRIPTOR = {
+        'V': 'void',
+        'Z': 'boolean',
+        'B': 'byte',
+        'S': 'short',
+        'C': 'char',
+        'I': 'int',
+        'J': 'long',
+        'F': 'float',
+        'D': 'double',
+    }
     res = TYPE_DESCRIPTOR.get(atype)
     if res:
         if res == 'void':
@@ -78,7 +88,7 @@ def pre_analysis(apk_path, out_path):
     apk_name = os.path.basename(apk_path)
 
     try:
-        apk, dex, arch_selected, so_stat, tags = apk_pre_analysis(apk_path, analyse_dex=True, prefer_32=PREFER_32)
+        apk_zip, dex, arch_selected, so_stat, tags = apk_pre_analysis(apk_path, analyse_dex=True, prefer_32=PREFER_32)
     except zipfile.BadZipFile:
         print("Bad zip file: " + apk_path)
         GLOBAL_STATE['bad_count'].append(apk_name)
@@ -91,7 +101,7 @@ def pre_analysis(apk_path, out_path):
         GLOBAL_STATE['bad_count'].append(apk_name)
         GLOBAL_STATE['progress'].add(apk_name)
         return
-    zip = apk.zip #type: ZipFile
+    zip = apk_zip #type: ZipFile
     so_mappings = dex.get_mappings_by_so()
     print(f"Selected arch is {arch_selected}")
     extracted_so = set()
@@ -292,6 +302,7 @@ def mp_run(args_list, process_count, out_path):
 analysis_start_time = None
 
 def main():
+    logging.basicConfig(level=logging.WARNING)
     global analysis_start_time
     analysis_start_time = time.time()
     global PREFER_32

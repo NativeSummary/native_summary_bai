@@ -130,7 +130,7 @@ def apk_pre_analysis(apk_path, analyse_dex=True, prefer_32=None):
             # 2.3 统计：解析失败的Java侧方法数量。
             # 3 打印解析结果：（成功解析的Java侧函数，so库）集合，失败的Java侧，（失败的Native侧，so库）集合。
     tags = {'is_flutter': is_flutter, 'has_so':has_so, 'has_javasym':has_javasym}
-    return apk, dex, arch_selected, so_stat, tags
+    return apk_zip, dex, arch_selected, so_stat, tags
 
 
 def get_resolve_report(apk_path, dex, arch_selected, so_stat):

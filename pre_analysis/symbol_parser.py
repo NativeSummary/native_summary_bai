@@ -3,7 +3,6 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def get_arg_sig(full_sig):
