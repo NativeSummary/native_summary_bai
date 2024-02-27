@@ -85,6 +85,7 @@ same above, but set cli to `ghidra.GhidraRun`
 ### FAQ
 
 1. `> Unable to locate script class: NativeSummary.java` when this error occurs, just delete everything under `"C:\Users\xxx\.ghidra\.ghidra_10.1.2_PUBLIC\osgi\compiled-bundles\"`
+1. To access the ghidra project from GUI, change the owner in `xxx.apk/project/native_summary.rep/project.prp`.
 
 ### Other useful resources
 

@@ -234,7 +234,7 @@ public class EnvSetup {
             structAddr = structAddr.add(getCurrentProgram().getDefaultPointerSize());
         }
 
-        // TODO a better CategoryPath for log_simple.h, like android/log.h
+        // TODO collect android headers and set a better CategoryPath for log_simple.h, like android/log.h
         Map<String, FunctionDefinition> fname2sig = getFuncDefMap(getModuleDataTypeManager(flatAPI, "android_log"), "/log_simple.h/functions");
         // Set up signature for __android_log_print
         // iterate functions in plt section and apply signature according to map.
@@ -268,6 +268,21 @@ public class EnvSetup {
                     // assert can find
                     Function externalTarget = getCurrentProgram().getListing().getFunctions(Library.UNKNOWN, fname).get(0);
                     f.setThunkedFunction(externalTarget);
+                }
+            }
+        }
+        // other external functions
+        Map<String, FunctionDefinition> fname2sig2 = getFuncDefMap(getModuleDataTypeManager(flatAPI, "android_log"), "/libraries.h/functions");
+        for (Symbol s: table.getSymbols(currentProgram.getGlobalNamespace())) {
+            if (!(s instanceof FunctionSymbol)) {
+                continue;
+            }
+            Function f = (Function) s.getObject();
+            String fname = s.getName();
+            if (fname2sig2.containsKey(fname)) {
+                // ensure function signature is uninitialized
+                if (f.getParameterCount() == 0) {
+                    Utils.applyFunctionSig(currentProgram, f, fname2sig2.get(fname));
                 }
             }
         }

@@ -721,7 +721,7 @@ public class PcodeVisitor {
             callee = callee.getThunkedFunction(true);
         }
 
-        if (callee.isExternal() || FunctionModelManager.isFunctionAddressMapped(targetAddress)) {
+        if (callee.isExternal() || CLibraryFunctions.nonExternals.contains(callee.getName()) || FunctionModelManager.isFunctionAddressMapped(targetAddress)) {
             defineExternalFunctionSignature(pcode, inOutEnv, tmpEnv, callee);
 //            MemoryCorruption.checkExternalCallParameters(pcode, inOutEnv, tmpEnv, context, callee);
             JNIFunctionBase.currentCallSite = callSite;

@@ -224,14 +224,15 @@ public class Utils {
         return ret;
     }
 
-    public static List<Map.Entry<Function,org.example.nativesummary.ir.Function>> dedupList(Set<Function> funcsSet, List<Map.Entry<Function,org.example.nativesummary.ir.Function>> entries) {
+    public static List<Map.Entry<Function,org.example.nativesummary.ir.Function>> warnDedupList(Set<Function> funcsSet, List<Map.Entry<Function,org.example.nativesummary.ir.Function>> entries) {
         List<Map.Entry<Function,org.example.nativesummary.ir.Function>> ret = new ArrayList<>();
         for (Map.Entry<Function,org.example.nativesummary.ir.Function> e: entries) {
             if (!funcsSet.contains(e.getKey())) {
                 funcsSet.add(e.getKey());
                 ret.add(e);
             } else {
-                Logging.error("Function duplicate registered: "+e.getKey().getName() +", to " + e.getValue().toString());
+                Logging.error("Dynreg: duplicated registers: "+e.getKey().getName() +", to " + e.getValue().toString());
+                ret.add(e);
             }
         }
         return ret;

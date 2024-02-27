@@ -143,6 +143,8 @@ task buildExtension (type: Zip) {
 		exclude 'gradlew.bat'
 		exclude 'gradle/wrapper/gradle-wrapper.jar'
 		exclude 'gradle/wrapper/gradle-wrapper.properties'
+		exclude 'docker/**'
+		exclude 'pre_analysis/**'
 		
 		into pathInZip
 	}

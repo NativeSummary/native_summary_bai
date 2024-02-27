@@ -21,6 +21,7 @@ import ghidra.program.model.pcode.PcodeOpAST;
 import ghidra.program.model.pcode.Varnode;
 import ghidra.util.exception.DuplicateNameException;
 import ghidra.util.exception.InvalidInputException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.example.nativesummary.ir.Module;
 import org.example.nativesummary.ir.NumValueNamer;
 import org.example.nativesummary.env.TaintMap;
@@ -57,7 +58,7 @@ public class SummaryExporter extends CheckerBase {
     Map<JNIValue, Value> jvMap;
     public static final int ADDITIONAL_ARG_COUNT = 5;
 
-    public Set<Triple<String, String, Function>> dynRegSet = new HashSet<>();
+    public Set<Triple<Value,ImmutablePair<String, String>, Function>> dynRegSet = new HashSet<>();
     public List<String> dynRegName = new ArrayList<>();
     public List<String> dynRegSig = new ArrayList<>();
     public List<Function> dynRegFunc = new ArrayList<>();
@@ -334,7 +335,8 @@ public class SummaryExporter extends CheckerBase {
                     }
                 }
             }
-            Triple<String, String, Function> ele = new ImmutableTriple<>(sname, ssig, toRegister);
+            Value clazz = dynreg.operands.isEmpty() ? null: dynreg.operands.get(dynreg.operands.size()-1).value;
+            Triple<Value,ImmutablePair<String, String>, Function> ele = new ImmutableTriple<>(clazz, new ImmutablePair<String, String>(sname, ssig), toRegister);
             if (!dynRegSet.contains(ele)) {
                 dynRegSet.add(ele);
                 dynRegName.add(sname);
@@ -373,6 +375,9 @@ public class SummaryExporter extends CheckerBase {
     private boolean isVaListAPI(String target) {
         if (target == null) {
             return false;
+        }
+        if (target.equals("__vsprintf_chk")) {
+            return true;
         }
         return target.endsWith("MethodV") || target.equals("NewObjectV");
     }

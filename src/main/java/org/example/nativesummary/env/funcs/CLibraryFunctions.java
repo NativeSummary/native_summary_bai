@@ -14,9 +14,15 @@ public class CLibraryFunctions extends JNIFunctionBase {
             "prctl", "pipe", "fork", "waitpid", "execlp", "raise",
             "puts", "printf", "sprintf", "snprintf", "fprintf", "scanf", "__iso99_scanf", "sscanf", "__iso99_sscanf", "fscanf", "__isoc99_fscanf", "vprintf", "vfprintf",
             "strchr", "strdup",
-            "__aeabi_memclr4",
-            "eventfd", "poll"};
+            "__aeabi_memclr4", "__aeabi_memclr", "__aeabi_memclr8",
+            "__vsprintf_chk",
+            "eventfd", "poll",
+            "bufferevent_socket_new", "bufferevent_new", "curl_easy_setopt", "curl_easy_init"};
+
     private static final Set<String> staticSymbols = new HashSet<>(List.of(syms));
+
+    public static final String[] syms2 = {"bufferevent_socket_new", "bufferevent_new", "curl_easy_setopt", "curl_easy_init"};
+    public static final Set<String> nonExternals = new HashSet<>(List.of(syms2));
 
     // not print warning when symbols are not modeled
     // because these functions is not helpful to dataflow analysis, and is too verbose.

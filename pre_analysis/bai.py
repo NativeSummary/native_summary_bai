@@ -302,6 +302,8 @@ def mp_run(args_list, process_count, out_path):
 analysis_start_time = None
 
 def main():
+    from androguard.core.androconf import show_logging
+    show_logging(level=logging.WARNING)
     logging.basicConfig(level=logging.WARNING)
     global analysis_start_time
     analysis_start_time = time.time()

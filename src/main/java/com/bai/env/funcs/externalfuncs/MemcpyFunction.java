@@ -20,7 +20,7 @@ import java.util.Set;
  */
 public class MemcpyFunction extends ExternalFunctionBase {
 
-    private static final Set<String> staticSymbols = Set.of("memcpy", "__aeabi_memcpy");
+    private static final Set<String> staticSymbols = Set.of("memcpy", "__aeabi_memcpy", "__aeabi_memcpy4", "__aeabi_memcpy8");
 
     public MemcpyFunction() {
         super(staticSymbols);

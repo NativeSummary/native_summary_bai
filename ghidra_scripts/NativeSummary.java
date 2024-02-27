@@ -160,11 +160,11 @@ public class NativeSummary extends BinAbsInspector {
                 } else {
                     Logging.info("No Dynamic register behaviour in JNI_OnLoad");
                 }
-                funcsToAnalyze.addAll(org.example.nativesummary.util.Utils.dedupList(funcsSet, MyGlobalState.se.handleDynamicRegister()));
+                funcsToAnalyze.addAll(org.example.nativesummary.util.Utils.warnDedupList(funcsSet, MyGlobalState.se.handleDynamicRegister()));
                 MyGlobalState.onJNIOnLoadFinish();
             } else if (MyGlobalState.se.hasDynamicRegister()) {
                 Logging.info("Dynamic register behaviour in func: "+e.getKey().getName());
-                funcsToAnalyze.addAll(org.example.nativesummary.util.Utils.dedupList(funcsSet, MyGlobalState.se.handleDynamicRegister()));
+                funcsToAnalyze.addAll(org.example.nativesummary.util.Utils.warnDedupList(funcsSet, MyGlobalState.se.handleDynamicRegister()));
             }
             long durationOne = System.currentTimeMillis() - startOne;
             println("Analysis spent "+durationOne+" ms for "+e.getKey().getName());
