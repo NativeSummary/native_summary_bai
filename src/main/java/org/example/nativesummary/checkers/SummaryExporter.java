@@ -8,6 +8,8 @@ import com.bai.util.GlobalState;
 import com.bai.util.Logging;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.data.DataType;
+import ghidra.program.model.data.FunctionDefinition;
+import ghidra.program.model.data.ParameterDefinition;
 import ghidra.program.model.data.VoidDataType;
 import ghidra.program.model.lang.PrototypeModel;
 import ghidra.program.model.lang.Register;
@@ -22,6 +24,7 @@ import ghidra.program.model.pcode.Varnode;
 import ghidra.util.exception.DuplicateNameException;
 import ghidra.util.exception.InvalidInputException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.example.nativesummary.env.funcs.CLibraryFunctions;
 import org.example.nativesummary.ir.Module;
 import org.example.nativesummary.ir.NumValueNamer;
 import org.example.nativesummary.env.TaintMap;
@@ -49,6 +52,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static com.bai.env.funcs.externalfuncs.VarArgsFunctionBase.getVarArgsSignature;
+import static org.example.nativesummary.env.funcs.CLibraryFunctions.formatMap;
 
 public class SummaryExporter extends CheckerBase {
     Module mod = new Module();
@@ -118,10 +124,28 @@ public class SummaryExporter extends CheckerBase {
     public List<org.example.nativesummary.ir.Instruction> decodeParams(Function f, Call call, Function jniapi, AbsEnv env) {
         List<org.example.nativesummary.ir.Instruction> ret = new ArrayList<>();
         Parameter[] params = jniapi.getParameters();
-        int paramSize = jniapi.getParameters().length;
+        ArrayList<DataType> paramTypes = new ArrayList<>();
+        boolean isVaList = isVaListAPI(call.target);
+
+        if (CLibraryFunctions.formatMap.containsKey(jniapi.getName())) {
+            FunctionDefinition functionDefinition = getVarArgsSignature(GlobalState.flatAPI.toAddr(call.callsite));
+            if (functionDefinition != null) {
+                for(ParameterDefinition pd: functionDefinition.getArguments()) {
+                    paramTypes.add(pd.getDataType());
+                }
+                isVaList = false;
+            }
+        }
+        if (paramTypes.isEmpty()) {
+            for (Parameter p: params) {
+                paramTypes.add(p.getDataType());
+            }
+        }
+
+        int paramSize = paramTypes.size();
         for (int index=0;index<paramSize;index++) {
-            Parameter p = jniapi.getParameter(index);
-            String dtName = p.getDataType().getName();
+            DataType pdt = paramTypes.get(index);
+            String dtName = pdt.getName();
             if (dtName.equals("JNIEnv *") || dtName.equals("JavaVM *")) {
                 call.operands.add(new Use(call, Null.instance));
                 continue;
@@ -130,7 +154,7 @@ public class SummaryExporter extends CheckerBase {
 //            ALoc regaloc = ALoc.getALoc(Reg.getInstance(), p.getRegister().getOffset(), p.getRegister().getNumBytes());
             List<ALoc> alocs = getParamALocs(jniapi, index, env);
 
-            if (index == (paramSize-1) && isVaListAPI(call.target)) {
+            if (index == (paramSize-1) && isVaList) {
                 // handle va_list.
                 Logging.warn(String.format("Resolving %s additional arguments for %s at %s", ADDITIONAL_ARG_COUNT, jniapi.getName(), Utils.describeAddr(call.callsite)));
                 Utils.prependToComments(call, "va_list ");
@@ -160,7 +184,7 @@ public class SummaryExporter extends CheckerBase {
                 KSet ks = env.get(aloc);
 
                 // handle RegisterNatives.
-                if (p.getDataType().getName().equals("JNINativeMethod *")) {
+                if (pdt.getName().equals("JNINativeMethod *")) {
                     for (AbsVal val: ks) {
                         if (val.getRegion().isGlobal()) {
                             long ptr;
@@ -178,8 +202,8 @@ public class SummaryExporter extends CheckerBase {
                         Logging.info(String.format("[%s] [%s] at [%s]", dynRegName.get(i), dynRegSig.get(i), dynRegFunc.get(i)));
                     }
                 } else {
-                    v.addAll(decodeKSet(p.getDataType(), ks, env,
-                            String.format("Func %s Param %s %s",jniapi.getName(), p.getDataType().toString(), p.getName())));
+                    v.addAll(decodeKSet(pdt, ks, env,
+                            String.format("Func %s Param %s %s",jniapi.getName(), index, pdt)));
                 }
             }
             call.operands.add(new Use(call, phiMerge(v, ret)));

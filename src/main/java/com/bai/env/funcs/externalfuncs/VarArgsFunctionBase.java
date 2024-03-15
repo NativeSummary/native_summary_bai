@@ -62,7 +62,7 @@ public abstract class VarArgsFunctionBase extends ExternalFunctionBase {
      * @param sig is the overriding function signature
      * @throws InvalidInputException if there are problems committing the override symbol
      */
-    private static void writeSignature(Function function, Address callsite, FunctionSignature sig)
+    public static void writeSignature(Function function, Address callsite, FunctionSignature sig)
             throws InvalidInputException {
 
         ParameterDefinition[] params = sig.getArguments();

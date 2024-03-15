@@ -423,6 +423,8 @@ public class PcodeVisitor {
         externalFunction.defineDefaultSignature(callee);
         if (externalFunction instanceof VarArgsFunctionBase) {
             ((VarArgsFunctionBase) externalFunction).processVarArgsSignature(pcode, inOutEnv, callee);
+        } else if (externalFunction instanceof CLibraryFunctions) {
+            ((CLibraryFunctions) externalFunction).processVarArgsSignature(pcode, inOutEnv, callee);
         }
     }
 

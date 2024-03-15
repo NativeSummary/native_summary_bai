@@ -100,7 +100,7 @@ public class JNIFunctionBase extends ExternalFunctionBase {
         if (callFunc.getReturnType().getName().equals("void")) { // return void
             return;
         }
-        ALoc retALoc = getReturnALoc(callFunc, false);
+        ALoc retALoc = getReturnALoc(callFunc, true);
         if(callFunc.getReturnType().getName().equals("undefined")) {
             Logging.warn("Function ret type undefined: "+callFunc.getSignature().getPrototypeString());
         }
