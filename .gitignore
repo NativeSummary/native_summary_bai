@@ -13,3 +13,4 @@ gradle.properties
 .editorconfig
 /src/integration/resources/binaries
 /out/
+test1/

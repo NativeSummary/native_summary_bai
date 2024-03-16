@@ -50,7 +50,6 @@ public class NativeSummary extends BinAbsInspector {
 //        GlobalState.config.setDebug(true);
         GlobalState.config.clearCheckers();
         GlobalState.config.setEntryAddress("0x"+Long.toHexString(f.getEntryPoint().getOffset()));
-        GlobalState.config.setCallStringK(1);
         if (disableTimeot) {
             GlobalState.config.setTimeout(-1);
         }
@@ -76,10 +75,6 @@ public class NativeSummary extends BinAbsInspector {
 //            Utils.loadCustomExternalFunctionFromLabelHistory(GlobalState.currentProgram);
         }
         GlobalState.arch = new Architecture(GlobalState.currentProgram);
-
-        // !!ForDebug
-        // GlobalState.config.setTimeout(5);
-
 
         // static code coverage
         Logging.info("Calculating static coverage"); long startTime = System.currentTimeMillis();
